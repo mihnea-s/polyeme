@@ -1,0 +1,59 @@
+; Polyeme Test Suite Version 0.0.1
+;
+; This test suite is intended to be used to gauge
+; the completeness of a polyeme interpreter.
+;
+; The expressions will run in order and test different
+; aspects of the language, if an implementation error occurs
+; the suite uses `exit` to alert the user.
+;
+; Copyright (C) Mihnea Stoian
+
+(def tests-passed 0)
+(def tests-failed '())
+
+; Assert is used to assure the truthness of an expression
+(defn assert   (x m)   (unless x (exit m)))
+(defn asserteq (x y m) (assert (eq? x y) m))
+
+(defn +1 x (+ 1 x))
+(defn test x (if x 
+  (set! tests-passed (+1 tests-passed))
+  (set! tests-failed (+1 tests-failed))))
+
+(defn testeq (x y) (test (eq? x y)))
+
+; Basic mathematics
+(asserteq (+ 2 2) 4 "math: addition")
+(asserteq (- 6 3) 3 "math: subtraction")
+(asserteq (* 5 10) 50 "math: multiplication")
+(asserteq (- 99 3) 33 "math: division")
+
+; Let bindings
+(let [(y 3)]
+  (def x 2)
+  (let [] (def x 4))
+  (asserteq x 2 "let: bleed")
+  (asserteq y 3 "let: unbound var"))
+
+; Preloaded functions
+(let [] 
+  (defn +2 x (+ 2 x))
+  (asserteq (apply +2 2) 4 "preload: apply"))
+
+; Mutation
+(let []
+  ; set!
+  (def a 2)
+  (set! a 3)
+  (asserteq a 3 "mutation: set!")
+
+  ; vec-set!
+  (def b (vec 1))
+  (vec-set! b 0 "a")
+  (asserteq (vec@ 0 b) "a" "mutation: vec-set!"))
+
+; Finish test suite
+(write "Every test passed succesfully")
+(write "The implementation is complete")
+
