@@ -1,0 +1,13 @@
+include: package:effective_dart/analysis_options.yaml
+
+linter:
+  rules:
+    - avoid_empty_else
+    - avoid_types_as_parameter_names
+    - camel_case_types
+    - close_sinks
+
+analyzer:
+  strong-mode:
+    implicit-casts: false
+    implicit-dynamic: false
