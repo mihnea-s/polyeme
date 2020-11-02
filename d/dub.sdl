@@ -1,0 +1,10 @@
+name "polyeme"
+
+description "A scheme-like language"
+authors "Mihnea Stoian"
+copyright "Copyright © 2020, Mihnea Stoian"
+license "EUPL"
+
+targetPath "build"
+targetName "polyeme"
+targetType "dynamicLibrary"

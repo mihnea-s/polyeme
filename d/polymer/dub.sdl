@@ -1,0 +1,12 @@
+name "polymer"
+
+description "REPL for Polyeme in D"
+authors "Mihnea Stoian"
+copyright "Copyright © 2020, Mihnea Stoian"
+license "EUPL"
+
+targetName "polymer"
+targetPath "../build"
+targetType "executable"
+
+dependency "polyeme" version="*" path=".."
