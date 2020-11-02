@@ -1,0 +1,25 @@
+[tool.poetry]
+name = "polyeme"
+version = "0.1.0"
+license = "EUPL"
+readme = "README.md"
+description = "A scheme-like language"
+authors = ["mihnea-s <mihn.stn@gmail.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.7"
+prompt_toolkit = "^3.0.7"
+
+[tool.poetry.dev-dependencies]
+pytest = "^3.0"
+autopep8 = "^1.5.4"
+
+[tool.poetry.scripts]
+run = "polymer:main"
+
+[tool.poetry.urls]
+issues = "https://github.com/mihnea-s/polyeme/issues"
+[build-system]
+requires = ["poetry>=0.12"]
+build-backend = "poetry.masonry.api"
+
