@@ -1,0 +1,17 @@
+[package]
+name = 'polyeme'
+version = '0.1.0'
+authors = ['mihnea-s <mihn.stn@gmail.com>']
+edition = '2018'
+
+[[bin]]
+name = 'polymer'
+path = 'source/bin/main.rs'
+test = false
+bench = false
+
+[lib]
+name = 'polyeme'
+path = 'source/lib.rs'
+
+[dependencies]
