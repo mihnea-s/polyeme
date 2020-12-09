@@ -138,8 +138,8 @@ export class Parser {
     while (!this.follows(')', ']')) {
       pair = {
         kind: DatumKind.Pair,
-        left: pair,
-        right: this.expression(),
+        left: this.expression(),
+        right: pair,
       };
     }
 

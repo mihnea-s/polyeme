@@ -7,7 +7,7 @@
     "test": "jest",
     "watch": "tsc -w",
     "lint": "eslint --fix 'source/**'",
-    "build": "npm run lint && tsc -b"
+    "build": "$npm_execpath run lint && tsc -b"
   },
   "author": "Mihnea Stoian",
   "license": "EUPL",

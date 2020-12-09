@@ -1,6 +1,6 @@
 import {Real, Environment, Datum, DatumKind} from './datum';
 
-test('test environment', () => {
+test('test Environment', () => {
   const testDatum: Real = {
     kind: DatumKind.Real,
     value: 2.0,
