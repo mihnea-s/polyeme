@@ -11,6 +11,9 @@ It's implementation is done in two steps:
 2. An executable `Polymer` which handles
   interactions with the user via stdio
 
+Check `OVERVIEW.plm` and `TESTSUITE.plm` to see the
+language in use.
+
 # Implementations
 
 - [ ] C
