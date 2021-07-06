@@ -137,7 +137,7 @@ export class Parser {
     }
 
     // match and capture character literals
-    if (matches = /^#'(\X)/.exec(this.buffer)) {
+    if (matches = /^#'(\S)/.exec(this.buffer)) {
       this.forward(matches[0].length);
 
       return {

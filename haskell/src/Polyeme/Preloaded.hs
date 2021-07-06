@@ -46,7 +46,7 @@ preloadedFuncs =
     ("chr<?", opChrChrBool (<)),
     ("chr>=?", opChrChrBool (>=)),
     ("chr<=?", opChrChrBool (<=)),
-    ("chr-num?", opChrBool (isNumber)),
+    ("chr-digit?", opChrBool (isNumber)),
     ("chr-alpha?", opChrBool (isAlpha)),
     ("chr-alnum?", opChrBool (isAlphaNum)),
     ("chr-space?", opChrBool (isSpace)),

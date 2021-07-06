@@ -15,6 +15,7 @@ import {
 import {
   Boolean,
   cast,
+  Character,
   Datum,
   DatumKind,
   Environment,
@@ -47,17 +48,17 @@ export const Preloaded: [string, (i: Interpreter, a: Datum[]) => Datum][] = [
   /***********************/
   // Character functions //
   /***********************/
-  // ("chr=?", opChrChrBool(==)),
-  // ("chr>?", opChrChrBool(>)),
-  // ("chr<?", opChrChrBool(<)),
-  // ("chr>=?", opChrChrBool(>=)),
-  // ("chr<=?", opChrChrBool(<=)),
-  // ("chr-num?", opChrBool(isNumber)),
-  // ("chr-alpha?", opChrBool(isAlpha)),
-  // ("chr-alnum?", opChrBool(isAlphaNum)),
-  // ("chr-space?", opChrBool(isSpace)),
-  // ("chr-lower?", opChrBool(isLower)),
-  // ("chr-upper?", opChrBool(isUpper)),
+  ['chr=?', opChrChrToBool((a, b) => a == b)],
+  ['chr>?', opChrChrToBool((a, b) => a > b)],
+  ['chr<?', opChrChrToBool((a, b) => a < b)],
+  ['chr>=?', opChrChrToBool((a, b) => a >= b)],
+  ['chr<=?', opChrChrToBool((a, b) => a <= b)],
+  ['chr-digit?', opChrToBool(isDigit)],
+  ['chr-alpha?', opChrToBool(isAlpha)],
+  ['chr-alnum?', opChrToBool(isAlphaNum)],
+  ['chr-space?', opChrToBool(isSpace)],
+  ['chr-lower?', opChrToBool(isLower)],
+  ['chr-upper?', opChrToBool(isUpper)],
 
   /*********************/
   // Numeric functions //
@@ -285,6 +286,62 @@ function opBoolBoolToBool(op: (a: boolean, b: boolean) => boolean) {
     return {
       kind: DatumKind.Boolean,
       value: op(a.value, b.value),
+    };
+  };
+}
+
+/***********************/
+// Character functions //
+/***********************/
+
+function isDigit(a: number): boolean {
+  return '0'.charCodeAt(0) <= a && a <= '9'.charCodeAt(0);
+}
+
+function isAlpha(a: number): boolean {
+  return !!String.fromCharCode(a).match(/(\p{Ll}|\p{Lu})/u);
+}
+
+function isAlphaNum(a: number): boolean {
+  return isDigit(a) || isAlpha(a);
+}
+
+function isSpace(a: number): boolean {
+  const str = String.fromCharCode(a);
+  return str.trim() === str;
+}
+
+function isLower(a: number): boolean {
+  const str = String.fromCharCode(a);
+  return str.toLowerCase() === str;
+}
+
+function isUpper(a: number): boolean {
+  const str = String.fromCharCode(a);
+  return str.toUpperCase() === str;
+}
+
+function opChrChrToBool(op: (a: number, b: number) => boolean) {
+  return (_: Interpreter, args: Datum[]): Datum => {
+    ensureCount(args, 2);
+    const a = cast<Character>(args[0], DatumKind.Character);
+    const b = cast<Character>(args[1], DatumKind.Character);
+
+    return {
+      kind: DatumKind.Boolean,
+      value: op(a.value, b.value),
+    };
+  };
+}
+
+function opChrToBool(op: (a: number) => boolean) {
+  return (_: Interpreter, args: Datum[]): Datum => {
+    ensureCount(args, 1);
+    const a = cast<Character>(args[0], DatumKind.Character);
+
+    return {
+      kind: DatumKind.Boolean,
+      value: op(a.value),
     };
   };
 }
