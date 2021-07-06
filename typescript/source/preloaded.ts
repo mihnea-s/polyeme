@@ -13,6 +13,7 @@ import {
 } from './platform';
 
 import {
+  Boolean,
   cast,
   Datum,
   DatumKind,
@@ -40,8 +41,8 @@ export const Preloaded = [
   /*********************/
   // Boolean functions //
   /*********************/
-  // ("and", opBoolBoolBool(&&)),
-  // ("or", opBoolBoolBool(||)),
+  ['and', opBoolBoolToBool((a, b) => a && b)],
+  ['or', opBoolBoolToBool((a, b) => a || b)],
 
   /***********************/
   // Character functions //
@@ -214,6 +215,7 @@ function loadFn(interp: Interpreter, args: Datum[]): Datum {
 
   const data = new Parser()
     .parseLines(content)
+    // @ts-ignore
     .map((result: Datum | ParsingError) => {
       if (result instanceof ParsingError) {
         throw result;
@@ -268,6 +270,23 @@ function systemFn(_: Interpreter, args: Datum[]): Datum {
 
 function voidFn(_: Interpreter, __: Datum[]): Datum {
   return mkVoid();
+}
+
+/*********************/
+// Boolean functions //
+/*********************/
+
+function opBoolBoolToBool(op: (a: boolean, b: boolean) => boolean) {
+  return (_: Interpreter, args: Datum[]): Datum => {
+    ensureCount(args, 2);
+    const a = cast<Boolean>(args[0], DatumKind.Boolean);
+    const b = cast<Boolean>(args[1], DatumKind.Boolean);
+
+    return {
+      kind: DatumKind.Boolean,
+      value: op(a.value, b.value),
+    };
+  };
 }
 
 /****************/
