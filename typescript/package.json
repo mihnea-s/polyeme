@@ -5,6 +5,9 @@
   "author": "Mihnea Stoian",
   "license": "EUPL-1.2",
   "main": "./out/index.js",
+  "browser": {
+    "./source/platform.ts": "./source/platform.browser.ts"
+  },
   "scripts": {
     "test": "jest",
     "watch": "tsc -w",
