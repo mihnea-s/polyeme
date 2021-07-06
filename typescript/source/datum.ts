@@ -1,14 +1,24 @@
-import { Duplex, Writable, Readable } from 'stream';
-import { RuntimeError } from './eval';
+import { ReadPort, WritePort, ReadWritePort } from './platform';
+import { Interpreter, RuntimeError } from './eval';
 
 export type Datum
-  = Symbol | Boolean | Character
-  | Integer | Real | String
-  | Vector | Hash | Port
-  | Pair | Environment | JSFunction
+  = Void
+  | Symbol
+  | Boolean
+  | Character
+  | Integer
+  | Real
+  | String
+  | Vector
+  | Hash
+  | Port
+  | Pair
+  | Environment
+  | JSFunction
   | Procedure;
 
 export enum DatumKind {
+  Void,
   Symbol,
   Boolean,
   Character,
@@ -22,6 +32,10 @@ export enum DatumKind {
   Environment,
   JSFunction,
   Procedure,
+}
+
+export interface Void {
+  kind: DatumKind.Void,
 }
 
 export interface Symbol {
@@ -66,7 +80,7 @@ export interface Hash {
 
 export interface Port {
   kind: DatumKind.Port,
-  value: Writable | Readable | Duplex;
+  value: ReadPort | WritePort | ReadWritePort;
 }
 
 export interface Pair {
@@ -106,7 +120,7 @@ export class Environment {
 
 export interface JSFunction {
   kind: DatumKind.JSFunction,
-  value: (env: Environment, args: Array<Datum>) => Datum,
+  value: (env: Interpreter, args: Array<Datum>) => Datum,
 }
 
 export interface Procedure {
@@ -123,6 +137,22 @@ export interface Procedure {
  */
 export function isTruthy(datum: Datum): boolean {
   return !(datum.kind == DatumKind.Boolean && datum.value == false);
+}
+
+export function tryCast<T extends Datum>(datum: Datum, kind: T['kind']): T | null {
+  if (kind === datum.kind) {
+    return datum as T;
+  } else {
+    return null;
+  }
+}
+
+export function cast<T extends Datum>(datum: Datum, kind: T['kind']): T {
+  if (kind === datum.kind) {
+    return datum as T;
+  } else {
+    throw new RuntimeError(`unable to cast '${datum}'`);
+  }
 }
 
 export function pair(data: Datum[]): Datum {
@@ -145,4 +175,17 @@ export function unpair(datum: Datum): Datum[] {
   }
 
   return accum;
+}
+
+export function mkVoid(): Void {
+  return {
+    kind: DatumKind.Void
+  };
+}
+
+export function mkSymbol(value: string): Symbol {
+  return {
+    value,
+    kind: DatumKind.Symbol,
+  };
 }
