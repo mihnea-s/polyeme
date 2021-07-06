@@ -26,4 +26,28 @@ test('test parser', () => {
     ],
   });
 
+  expect(parser.parseLine('(quote a b)')).toEqual({
+    kind: DatumKind.Pair,
+    left: {
+      kind: DatumKind.Symbol,
+      value: 'quote'
+    },
+    right: {
+      kind: DatumKind.Pair,
+      left: {
+        kind: DatumKind.Symbol,
+        value: 'a'
+      },
+      right: {
+        kind: DatumKind.Pair,
+        left: {
+          kind: DatumKind.Symbol,
+          value: 'b',
+        }, right: {
+          kind: DatumKind.Symbol,
+          value: '()',
+        },
+      },
+    }
+  });
 });
