@@ -1,6 +1,6 @@
 import { Datum, DatumKind } from './datum';
 
-type ParsingError = {
+export type ParsingError = {
   description: string,
   location: [number, number];
 };

@@ -76,7 +76,7 @@ const cases: [string, Datum][] = [
   }],
 ];
 
-test('test parser', () => {
+test('test Parser', () => {
   const parser = new Parser();
 
   for (const [source, datum] of cases) {
