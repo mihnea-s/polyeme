@@ -44,10 +44,11 @@ export class Parser {
   private expect(...args: string[]): void {
     if (!this.follows(...args)) {
       const expected = args.map(a => `'${a}'`).join(', ');
+      const actual = this.buffer.substr(0, 10);
 
       throw {
         location: this.location,
-        description: `expected one of ${expected}, but found none`
+        description: `expected one of ${expected}, but found '${actual}..'`
       };
     }
   }
@@ -104,8 +105,18 @@ export class Parser {
       };
     }
 
-    // match and parse integer literals (including hex and bin)
-    if (matches = /^((?:0x|b)?[\da-f]+)/.exec(this.buffer)) {
+    // match and parse hex integer literals
+    if (matches = /^(0x[\da-f]+)/.exec(this.buffer)) {
+      this.forward(matches[0].length);
+
+      return {
+        kind: DatumKind.Integer,
+        value: Number.parseInt(matches[1]),
+      };
+    }
+
+    // match and parse integer literals (including binary)
+    if (matches = /^((?:0b)?[\d]+)/.exec(this.buffer)) {
       this.forward(matches[0].length);
 
       let value = 0;
@@ -143,11 +154,8 @@ export class Parser {
       };
     }
 
-    // symbol regex (split over multiple lines)
-    const symbolRegex = new RegExp([
-      /^[-!#$%&|*+/:<=>?@^_~\p{Ll}]/,
-      /[-!#$%&|*+/:<=>?@^_~\d\p{Ll}]*/,
-    ].map(r => r.source).join(''));
+    // symbol regex
+    const symbolRegex = /^[-!#$%&|*+/:<=>?@^_~\p{Ll}][-!#$%&|*+/:<=>?@^_~\d\p{Ll}]*/u;
 
     // match and capture valid symbols
     if (matches = symbolRegex.exec(this.buffer)) {
@@ -162,20 +170,25 @@ export class Parser {
 
     this.expect('(', '[');
 
-    let pair: Datum = {
-      kind: DatumKind.Symbol,
-      value: '()'
+    let root: Datum = {
+      kind: DatumKind.Pair,
+      left: this.expression(),
+      right: {
+        kind: DatumKind.Symbol,
+        value: '()',
+      },
     };
 
-    while (!this.follows(')', ']')) {
-      pair = {
+    // right associative fold of paranthesised lists
+    for (let pair = root; !this.follows(')', ']'); pair = pair.right) {
+      pair.right = {
         kind: DatumKind.Pair,
         left: this.expression(),
-        right: pair,
+        right: pair.right,
       };
     }
 
-    return pair;
+    return root;
   }
 
   parseLine(line: string): Datum | ParsingError {
