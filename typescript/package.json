@@ -2,6 +2,8 @@
   "name": "polyeme",
   "version": "0.1.0",
   "description": "A scheme-like language",
+  "author": "Mihnea Stoian",
+  "license": "EUPL-1.2",
   "main": "./out/index.js",
   "scripts": {
     "test": "jest",
@@ -9,8 +11,6 @@
     "lint": "eslint --fix 'source/**'",
     "build": "$npm_execpath run lint && tsc -b"
   },
-  "author": "Mihnea Stoian",
-  "license": "EUPL",
   "devDependencies": {
     "typescript": "^3.8.3",
     "@types/node": "^13.9.5",
