@@ -106,7 +106,7 @@ export class Environment {
 
 export interface JSFunction {
   kind: DatumKind.JSFunction,
-  value: (args: Array<Datum>) => Datum,
+  value: (env: Environment, args: Array<Datum>) => Datum,
 }
 
 export interface Procedure {

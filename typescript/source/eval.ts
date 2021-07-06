@@ -72,7 +72,7 @@ export class Interpreter {
 
       case 'let':
         throw new RuntimeError('undefined');
-        
+
       case 'def':
         throw new RuntimeError('undefined');
 
@@ -106,7 +106,7 @@ export class Interpreter {
         return this.applyProc(fn, args);
 
       case DatumKind.JSFunction:
-        return fn.value(args);
+        return fn.value(this.environment(), args);
 
       default:
         throw new RuntimeError('invalid interpreter state');
