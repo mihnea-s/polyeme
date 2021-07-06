@@ -1,13 +1,17 @@
 {
-  "compilerOptions": {
-    "strict": true,
-    "outDir": "out",
-    "rootDir": "source",
-    "module": "CommonJS",
-    "target": "ES2016",
-  },
+  "include": [
+    "index.ts",
+    "source/**/*.ts",
+  ],
   "exclude": [
     "node_modules",
     "**/*.test.ts",
-  ]
+  ],
+  "compilerOptions": {
+    "strict": true,
+    "outDir": "out",
+    "rootDir": ".",
+    "module": "CommonJS",
+    "target": "ES2016",
+  },
 }
