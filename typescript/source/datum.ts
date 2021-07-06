@@ -1,10 +1,11 @@
 import { Duplex, Writable, Readable } from 'stream';
+import { RuntimeError } from './eval';
 
 export type Datum
   = Symbol | Boolean | Character
   | Integer | Real | String
   | Vector | Hash | Port
-  | Pair | Environment | Function
+  | Pair | Environment | JSFunction
   | Procedure;
 
 export enum DatumKind {
@@ -19,7 +20,7 @@ export enum DatumKind {
   Port,
   Pair,
   Environment,
-  Function,
+  JSFunction,
   Procedure,
 }
 
@@ -81,7 +82,7 @@ export class Environment {
 
   read(name: string): Datum {
     if (!this.env.has(name)) {
-      throw `undefined ${name}`;
+      throw new RuntimeError(`undefined variable '${name}'`);
     }
 
     return this.env.get(name)!;
@@ -103,14 +104,15 @@ export class Environment {
   }
 }
 
-export interface Function {
-  kind: DatumKind.Function,
+export interface JSFunction {
+  kind: DatumKind.JSFunction,
   value: (args: Array<Datum>) => Datum,
 }
 
 export interface Procedure {
   kind: DatumKind.Procedure,
   body: Array<Datum>,
+  varParam: string | null,
   parameters: Array<string>,
   closure: Environment,
 }
@@ -123,3 +125,24 @@ export function isTruthy(datum: Datum): boolean {
   return !(datum.kind == DatumKind.Boolean && datum.value == false);
 }
 
+export function pair(data: Datum[]): Datum {
+  return data.reduceRight(
+    (right, left) => ({ kind: DatumKind.Pair, left, right }),
+    { kind: DatumKind.Symbol, value: '()' }
+  );
+}
+
+export function unpair(datum: Datum): Datum[] {
+  const accum = [];
+
+  while (datum.kind === DatumKind.Pair) {
+    accum.push(datum.left);
+    datum = datum.right;
+  }
+
+  if (datum.kind !== DatumKind.Symbol || datum.value !== '()') {
+    accum.push(datum);
+  }
+
+  return accum;
+}
