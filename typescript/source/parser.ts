@@ -48,10 +48,10 @@ export class Parser {
       const expected = args.map(a => `'${a}'`).join(', ');
       const actual = this.buffer.substr(0, 10);
 
-      throw {
-        location: this.location,
-        description: `expected one of ${expected}, but found '${actual}..'`
-      };
+      throw new ParsingError(
+        `expected one of ${expected}, but found '${actual}..'`,
+        this.location,
+      );
     }
   }
 
@@ -204,10 +204,10 @@ export class Parser {
       return error;
     }
 
-    if (!this.eof()) return {
-      location: this.location,
-      description: 'expected end of line',
-    };
+    if (!this.eof()) return new ParsingError(
+      'expected end of line',
+      this.location,
+    );
 
     return expr;
   }
@@ -226,10 +226,13 @@ export class Parser {
       }
     };
 
-    if (!this.eof()) return [...errors, {
-      location: this.location,
-      description: 'expected end of file',
-    }];
+    if (!this.eof()) return [
+      ...errors,
+      new ParsingError(
+        'expected end of file',
+        this.location,
+      )
+    ];
 
     if (errors.length > 0) {
       return errors;
