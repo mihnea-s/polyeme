@@ -20,7 +20,7 @@ export class Parser {
    * Skip ahead in the buffer `n` characters.
    */
   private forward(n: number = 1): void {
-    this.buffer = this.buffer.substring(n);
+    this.buffer = this.buffer.substring(n).trimStart();
   }
 
   /**
@@ -192,7 +192,7 @@ export class Parser {
   }
 
   parseLine(line: string): Datum | ParsingError {
-    this.buffer = line;
+    this.buffer = line.trimStart();
 
     let expr;
 
@@ -211,7 +211,7 @@ export class Parser {
   }
 
   parseLines(lines: string): Datum[] | ParsingError[] {
-    this.buffer = lines;
+    this.buffer = lines.trimStart();
 
     let exprs = [];
     let errors = [];

@@ -2,7 +2,7 @@ import { DatumKind, Datum } from './datum';
 import { Parser } from './parser';
 
 const cases: [string, Datum][] = [
-  ['#(1 0b10 0xf0 2,6)', {
+  ['#(1    0b10   \n 0xf0 \t 2,6   )', {
     kind: DatumKind.Vector,
     value: [
       {
