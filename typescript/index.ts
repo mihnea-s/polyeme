@@ -1,20 +1,23 @@
 import { readFileSync } from 'fs';
 import { createInterface } from 'readline';
 
-import { bold, green, red } from 'chalk';
+import { bold, green, magenta, red } from 'chalk';
 import { Parser, ParsingError } from './source/parser';
 import { Interpreter, RuntimeError } from './source/eval';
 import { Datum, toString } from './source/datum';
 
+const VERSION = '0.1.0';
+
 const RL = createInterface({
   input: process.stdin,
   output: process.stdout,
-  prompt: green('> '),
 });
 
 const PARSER = new Parser();
 
 const INTERP = new Interpreter();
+
+console.log(magenta(`Polyeme JS -- ${VERSION}`));
 
 if (process.argv.length > 3) {
   RL.write(red('Error: too many arguments given'));
