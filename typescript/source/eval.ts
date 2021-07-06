@@ -5,23 +5,25 @@ import {
   pair,
   Pair,
   Procedure,
-  unpair
+  unpair,
 } from './datum';
 
 export class RuntimeError {
-  constructor(public description: string) { }
-};
+  constructor(public description: string) {}
+}
 
 export class Interpreter {
-  constructor(private env = [new Environment()]) {
-  }
+  constructor(private env = [new Environment()]) {}
 
   private applyProc(fn: Procedure, args: Datum[]): Datum {
     if (fn.parameters.length < args.length) {
       throw new RuntimeError('functional call with too few arguments');
     }
 
-    const params: [string, Datum][] = fn.parameters.map(p => [p, args.shift()!]);
+    const params: [string, Datum][] = fn.parameters.map((p) => [
+      p,
+      args.shift()!,
+    ]);
 
     if (fn.varParam) {
       params.push([fn.varParam, pair(args)]);
@@ -31,7 +33,7 @@ export class Interpreter {
 
     this.env.push(fn.closure.extend(params));
 
-    let returnValue = fn.body.map(this.evaluateUnsafe).reverse().shift();
+    let returnValue = fn.body.map(this.tryEvaluate).reverse().shift();
 
     this.env.pop();
 
@@ -44,7 +46,10 @@ export class Interpreter {
 
   private evalPair(pair: Pair): Datum {
     if (pair.left.kind === DatumKind.Procedure) {
-      return this.applyProc(pair.left, unpair(pair.right).map(this.evaluateUnsafe));
+      return this.applyProc(
+        pair.left,
+        unpair(pair.right).map(this.tryEvaluate)
+      );
     }
 
     if (pair.left.kind !== DatumKind.Symbol) {
@@ -92,12 +97,12 @@ export class Interpreter {
     let args = unpair(pair.right);
 
     if (pair.left.value.endsWith('!')) {
-      args = args.map(this.evaluateUnsafe);
+      args = args.map(this.tryEvaluate);
     } else {
       if (args.length < 0 && args[0].kind! == DatumKind.Symbol) {
         throw new RuntimeError('invalid arguments for setter');
       } else {
-        args = [args[0], ...args.slice(1).map(this.evaluateUnsafe)];
+        args = [args[0], ...args.slice(1).map(this.tryEvaluate)];
       }
     }
 
@@ -106,14 +111,32 @@ export class Interpreter {
         return this.applyProc(fn, args);
 
       case DatumKind.JSFunction:
-        return fn.value(this.environment(), args);
+        return fn.value(this, args);
 
       default:
         throw new RuntimeError('invalid interpreter state');
     }
   }
 
-  private evaluateUnsafe(datum: Datum): Datum {
+  /**
+   * Get the current environment of the interpreter.
+   * @returns environment being used to evaluate expressions
+   */
+  environment(): Environment {
+    if (this.env.length === 0) {
+      throw new RuntimeError('invalid interpreter state');
+    }
+
+    return this.env[0];
+  }
+
+  /**
+   * Try to evaluate an expreesion, throws if fails.
+   * @param   {Datum}         datum the expression to be evaluated
+   * @throws  {RuntimeError}  if evaluation fails
+   * @returns {Datum}         the value of the evaluated expression
+   */
+  tryEvaluate(datum: Datum): Datum {
     switch (datum.kind) {
       case DatumKind.Boolean:
       case DatumKind.Character:
@@ -128,22 +151,33 @@ export class Interpreter {
 
       default:
         throw new RuntimeError('invalid special form');
-    };
-  }
-
-  environment(): Environment {
-    if (this.env.length === 0) {
-      throw new RuntimeError('invalid interpreter state');
     }
-
-    return this.env[0];
   }
 
+  /**
+   * Wrapper around tryEvaluate that does not throw.
+   * @param   {Datum} datum the expression to be evaluated
+   * @returns {Datum | RuntimeError} the value of the evaluated expression or the error
+   */
   evaluate(datum: Datum): Datum | RuntimeError {
     try {
-      return this.evaluateUnsafe(datum);
+      return this.tryEvaluate(datum);
     } catch (error) {
       return error;
     }
+  }
+
+  /**
+   * Evaluate a value in the given environment.
+   * @param {Datum}       datum the expression to be evaluated
+   * @param {Environment} env   the environment to be used in evaluation
+   * @returns {Datum | RuntimeError} the value of the evaluated expression or the error
+   */
+  evaluateWith(datum: Datum, env: Environment): Datum | RuntimeError {
+    this.env.push(env);
+    const evaluated = this.evaluate(datum);
+    this.env.pop();
+
+    return evaluated;
   }
 }
