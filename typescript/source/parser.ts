@@ -1,8 +1,10 @@
 import { Datum, DatumKind } from './datum';
 
-export type ParsingError = {
-  description: string,
-  location: [number, number];
+export class ParsingError {
+  constructor(
+    public description: string,
+    public location: [number, number],
+  ) { }
 };
 
 export class Parser {
