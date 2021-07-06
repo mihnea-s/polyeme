@@ -152,13 +152,22 @@ export class Interpreter {
    */
   tryEvaluate(datum: Datum): Datum {
     switch (datum.kind) {
+      case DatumKind.Void:
       case DatumKind.Boolean:
       case DatumKind.Character:
       case DatumKind.Integer:
       case DatumKind.Real:
       case DatumKind.String:
       case DatumKind.Vector:
+      case DatumKind.Hash:
+      case DatumKind.Environment:
+      case DatumKind.Port:
+      case DatumKind.JSFunction:
+      case DatumKind.Procedure:
         return datum;
+
+      case DatumKind.Symbol:
+        return this.environment().read(datum.value);
 
       case DatumKind.Pair:
         return this.evalPair(datum);
