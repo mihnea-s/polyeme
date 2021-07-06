@@ -22,6 +22,10 @@ export function systemExec(cmd: string, args: string[]): [WritePort, ReadPort] {
   return [proc.stdin, proc.stdout];
 }
 
+export function abortExecution(): never {
+  process.exit(0);
+}
+
 export function readFileToString(file: string): string {
   return readFileSync(file, 'utf-8');
 }

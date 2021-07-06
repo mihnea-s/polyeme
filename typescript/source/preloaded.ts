@@ -9,7 +9,8 @@ import {
   systemExec,
   readFileToString,
   openFileWrite,
-  openFileRead
+  openFileRead,
+  abortExecution
 } from './platform';
 
 import {
@@ -25,6 +26,7 @@ import {
   Port,
   String,
   Symbol,
+  toString,
   tryCast,
 } from './datum';
 
@@ -187,13 +189,17 @@ export const Preloaded: [string, (i: Interpreter, a: Datum[]) => Datum][] = [
 
 function ensureCount(args: Datum[], count: number) {
   if (args.length !== count) {
-    throw new RuntimeError('function called with invalid type');
+    throw new RuntimeError(
+      `function called with ${args.length} argument(s) instead of ${count}`
+    );
   }
 }
 
 function ensureMinCount(args: Datum[], count: number) {
   if (args.length <= count) {
-    throw new RuntimeError('function called with invalid type');
+    throw new RuntimeError(
+      `function called with ${args.length} argument(s) but needs at least ${count}`
+    );
   }
 }
 
@@ -207,7 +213,8 @@ function setFn(interp: Interpreter, args: Datum[]): Datum {
 }
 
 function exitFn(_: Interpreter, args: Datum[]): Datum {
-  throw `Exit was called ${args.join(', ')}`;
+  getStdout().write(`Exit was called ${args.map(toString).join(', ')}\n`);
+  abortExecution();
 }
 
 function loadFn(interp: Interpreter, args: Datum[]): Datum {
