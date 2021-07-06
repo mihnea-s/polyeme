@@ -20,6 +20,7 @@ import {
   DatumKind,
   Environment,
   mkVoid,
+  Pair,
   pair,
   Port,
   String,
@@ -126,11 +127,11 @@ export const Preloaded: [string, (i: Interpreter, a: Datum[]) => Datum][] = [
   /******************/
   // Pair functions //
   /******************/
-  // ("car", car),
-  // ("cdr", cdr),
-  // ("cons", cons),
-  // ("nil?", isNil),
-  // ("list", const $ return .pair),
+  ['car', carProc],
+  ['cdr', cdrProc],
+  ['cons', consProc],
+  ['nil?', isNilProc],
+  ['list', listProc],
 
   /****************/
   // IO functions //
@@ -146,20 +147,20 @@ export const Preloaded: [string, (i: Interpreter, a: Datum[]) => Datum][] = [
   /*************************/
   // Polymorphic functions //
   /*************************/
-  // ("eq?", isEq),
-  // ("same?", isSame),
-  // ("sym?", isSym),
-  // ("bool?", isBool),
-  // ("chr?", isChr),
-  // ("int?", isInt),
-  // ("real?", isReal),
-  // ("str?", isStr),
-  // ("vec?", isVec),
-  // ("hash?", isHash),
-  // ("port?", isPort),
-  // ("list?", isList),
-  // ("env?", isEnv),
-  // ("proc?", isProc),
+  ['eq?', areEqual],
+  ['same?', areSame],
+  ['sym?', isOfDatumKind(DatumKind.Symbol)],
+  ['bool?', isOfDatumKind(DatumKind.Boolean)],
+  ['chr?', isOfDatumKind(DatumKind.Character)],
+  ['int?', isOfDatumKind(DatumKind.Integer)],
+  ['real?', isOfDatumKind(DatumKind.Real)],
+  ['str?', isOfDatumKind(DatumKind.String)],
+  ['vec?', isOfDatumKind(DatumKind.Vector)],
+  ['hash?', isOfDatumKind(DatumKind.Hash)],
+  ['port?', isOfDatumKind(DatumKind.Port)],
+  ['list?', isOfDatumKind(DatumKind.Pair)],
+  ['env?', isOfDatumKind(DatumKind.Environment)],
+  ['proc?', isOfDatumKind(DatumKind.Procedure)],
 
   /**************************/
   // Type casting functions //
@@ -342,6 +343,76 @@ function opChrToBool(op: (a: number) => boolean) {
     return {
       kind: DatumKind.Boolean,
       value: op(a.value),
+    };
+  };
+}
+
+/******************/
+// Pair functions //
+/******************/
+
+function carProc(_: Interpreter, args: Datum[]): Datum {
+  ensureCount(args, 1);
+  return cast<Pair>(args[0], DatumKind.Pair).left;
+}
+
+function cdrProc(_: Interpreter, args: Datum[]): Datum {
+  ensureCount(args, 1);
+  return cast<Pair>(args[0], DatumKind.Pair).right;
+}
+
+function consProc(_: Interpreter, args: Datum[]): Datum {
+  ensureCount(args, 2);
+  const [car, cdr] = args;
+
+  return {
+    kind: DatumKind.Pair,
+    left: car,
+    right: cdr,
+  };
+}
+
+function isNilProc(_: Interpreter, args: Datum[]): Datum {
+  ensureCount(args, 1);
+
+  return {
+    kind: DatumKind.Boolean,
+    value: args[0].kind === DatumKind.Symbol && args[0].value === '()',
+  };
+}
+
+function listProc(_: Interpreter, args: Datum[]): Datum {
+  return pair(args);
+}
+
+/*************************/
+// Polymorphic functions //
+/*************************/
+
+function areEqual(_: Interpreter, args: Datum[]): Datum {
+  ensureCount(args, 2);
+
+  return {
+    kind: DatumKind.Boolean,
+    value: false,
+  };
+}
+
+function areSame(_: Interpreter, args: Datum[]): Datum {
+  ensureCount(args, 2);
+
+  return {
+    kind: DatumKind.Boolean,
+    value: false,
+  };
+}
+
+function isOfDatumKind(kind: DatumKind) {
+  return (_: Interpreter, args: Datum[]): Datum => {
+    ensureCount(args, 1);
+    return {
+      kind: DatumKind.Boolean,
+      value: args[0].kind === kind,
     };
   };
 }
