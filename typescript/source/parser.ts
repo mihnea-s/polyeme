@@ -75,7 +75,7 @@ export class Parser {
     if (this.follows('#t')) {
       return {
         kind: DatumKind.Boolean,
-        value: false,
+        value: true,
       };
     } else if (this.follows('#f')) {
       return {
