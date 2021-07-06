@@ -189,3 +189,47 @@ export function mkSymbol(value: string): Symbol {
     kind: DatumKind.Symbol,
   };
 }
+
+export function toString(datum: Datum): string {
+  switch (datum.kind) {
+    case DatumKind.Void:
+      return '#<void>';
+
+    case DatumKind.Symbol:
+      return datum.value;
+
+    case DatumKind.Boolean:
+      return datum.value ? '#t' : '#f';
+
+    case DatumKind.Character:
+      return `#'${String.fromCharCode(datum.value)}`;
+
+    case DatumKind.Integer:
+    case DatumKind.Real:
+      return `${datum.value}`;
+
+    case DatumKind.String:
+      return `"${datum.value}"`;
+
+    case DatumKind.Hash:
+      return '#<hash>';
+
+    case DatumKind.Port:
+      return '#<port>';
+
+    case DatumKind.Pair:
+      return `(${unpair(datum).map(toString).join(' ')})`;
+
+    case DatumKind.Vector:
+      return `#(${datum.value.map(toString).join(' ')})`;
+
+    case DatumKind.Environment:
+      return '#<environement>';
+
+    case DatumKind.JSFunction:
+      return '#<js-function>';
+
+    case DatumKind.Procedure:
+      return '#<procedure>';
+  }
+}
