@@ -34,7 +34,7 @@ if (process.argv.length === 3) {
 
   if (parsed instanceof ParsingError) {
     for (const parseError of (parsed as ParsingError[])) {
-      console.log(red(`Error while parsing: ${parseError.description}.\n`));
+      console.log(red(`Error while parsing: ${parseError.description}.`));
     }
 
     process.exit(1);
@@ -44,7 +44,7 @@ if (process.argv.length === 3) {
     const result = INTERP.evaluate(expr);
 
     if (result instanceof RuntimeError) {
-      console.log(red(`Error while executing: ${result.description}.\n`));
+      console.log(red(`Error while executing: ${result.description}.`));
       process.exit(1);
     }
   }
@@ -52,19 +52,31 @@ if (process.argv.length === 3) {
   process.exit(0);
 }
 
-const runRepl = () => {
-  RL.question(green('> '), (line => {
+const runRepl = (indent: number = 0) => {
+  let buffer: string = '';
+
+  RL.question(green(indent == 0 ? '> ' : '| '), (line => {
+    buffer += line;
+    indent += (line.match(/\(/) ?? []).length - (line.match(/\)/) ?? []).length;
+
+    if (indent > 0) {
+      return runRepl(indent);
+    } else {
+      line = buffer;
+      buffer = '';
+    }
+
     const parsed = PARSER.parseLine(line);
 
     if (parsed instanceof ParsingError) {
-      console.log(red(`Error while parsing: ${parsed.description}.\n`));
+      console.log(red(`Error while parsing: ${parsed.description}.`));
       return runRepl();
     }
 
     const result = INTERP.evaluate(parsed);
 
     if (result instanceof RuntimeError) {
-      console.log(red(`Error while executing: ${result.description}.\n`));
+      console.log(red(`Error while executing: ${result.description}.`));
       return runRepl();
     }
 
