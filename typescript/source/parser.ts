@@ -1,16 +1,32 @@
-import {Datum, DatumKind} from './datum';
+import { Datum, DatumKind } from './datum';
+
+type ParsingError = {
+  description: string,
+  location: [number, number];
+};
 
 export class Parser {
   private buffer: string = '';
+  private location: [number, number] = [0, 0];
 
+  /**
+   * Check if the buffer reached its end.
+   */
   private eof(): boolean {
     return this.buffer.length == 0;
   }
 
+  /**
+   * Skip ahead in the buffer `n` characters.
+   */
   private forward(n: number = 1): void {
     this.buffer = this.buffer.substring(n);
   }
 
+  /**
+   * Check if the buffer starts with one of `args`
+   * and skip ahead if it does.
+   */
   private follows(...args: string[]): boolean {
     for (const prefix of args) {
       if (!this.buffer.startsWith(prefix)) continue;
@@ -21,9 +37,18 @@ export class Parser {
     return false;
   }
 
+  /**
+   * Check if the buffer starts with one of `args`,
+   * throws an error if it doesn't.
+   */
   private expect(...args: string[]): void {
     if (!this.follows(...args)) {
-      throw 'TODO';
+      const expected = args.map(a => `'${a}'`).join(', ');
+
+      throw {
+        location: this.location,
+        description: `expected one of ${expected}, but found none`
+      };
     }
   }
 
@@ -37,7 +62,7 @@ export class Parser {
         kind: DatumKind.Pair,
         right: expr,
         left: {
-          kind:DatumKind.Symbol, 
+          kind: DatumKind.Symbol,
           value: 'quote'
         },
       };
@@ -54,13 +79,13 @@ export class Parser {
         kind: DatumKind.Boolean,
         value: false,
       };
-    } else if (this.follows ('#(')) {
+    } else if (this.follows('#(')) {
       let vec = new Array();
 
       while (!this.follows(')', ']')) {
         vec.push(this.expression());
       }
-  
+
       return {
         kind: DatumKind.Vector,
         value: vec,
@@ -94,7 +119,7 @@ export class Parser {
     // match and capture character literals
     if (matches = /^#'(\X)/.exec(this.buffer)) {
       this.forward(matches[0].length);
-      
+
       return {
         kind: DatumKind.Character,
         value: matches[1].codePointAt(0)!,
@@ -146,22 +171,47 @@ export class Parser {
     return pair;
   }
 
-  parseLine(line: string): Datum {
+  parseLine(line: string): Datum | ParsingError {
     this.buffer = line;
 
-    const expr = this.expression();
+    let expr;
 
-    if (!this.eof()) throw 'TODO';
+    try {
+      expr = this.expression();
+    } catch (error) {
+      return error;
+    }
+
+    if (!this.eof()) return {
+      location: this.location,
+      description: 'expected end of line',
+    };
 
     return expr;
   }
 
-  parseLines(lines: string): Datum[] {
+  parseLines(lines: string): Datum[] | ParsingError[] {
     this.buffer = lines;
 
     let exprs = [];
+    let errors = [];
 
-    while (!this.eof()) exprs.push(this.expression());
+    while (!this.eof()) {
+      try {
+        exprs.push(this.expression());
+      } catch (error) {
+        errors.push(error);
+      }
+    };
+
+    if (!this.eof()) return [...errors, {
+      location: this.location,
+      description: 'expected end of file',
+    }];
+
+    if (errors.length > 0) {
+      return errors;
+    }
 
     return exprs;
   }
