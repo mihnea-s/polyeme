@@ -1,4 +1,4 @@
-import {Duplex, Writable, Readable} from 'stream';
+import { Duplex, Writable, Readable } from 'stream';
 
 export type Datum
   = Symbol | Boolean | Character
@@ -77,7 +77,7 @@ export interface Pair {
 export class Environment {
   readonly kind = DatumKind.Environment;
 
-  constructor(private env = new Map<string, Datum>()) {}
+  constructor(private env = new Map<string, Datum>()) { }
 
   read(name: string): Datum {
     if (!this.env.has(name)) {
@@ -115,5 +115,11 @@ export interface Procedure {
   closure: Environment,
 }
 
-
+/**
+ * Check if a value is truthy or falsy, only false booleans
+ * are falsy.
+ */
+export function isTruthy(datum: Datum): boolean {
+  return !(datum.kind == DatumKind.Boolean && datum.value == false);
+}
 

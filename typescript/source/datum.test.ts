@@ -1,4 +1,10 @@
-import {Real, Environment, Datum, DatumKind} from './datum';
+import {
+  Real,
+  Environment,
+  Datum,
+  DatumKind,
+  isTruthy,
+} from './datum';
 
 test('test Environment', () => {
   const testDatum: Real = {
@@ -43,4 +49,16 @@ test('test Environment', () => {
 
   // undefined value thows
   expect(() => newEnv.read('z')).toThrow();
+});
+
+test('test isTruthy', () => {
+  const mappings: [Datum, boolean][] = [
+    [{ kind: DatumKind.Boolean, value: false }, false],
+    [{ kind: DatumKind.Boolean, value: true }, true],
+    [{ kind: DatumKind.Character, value: 2 }, true],
+  ];
+
+  for (const [val, want] of mappings) {
+    expect(isTruthy(val)).toBe(want);
+  }
 });
