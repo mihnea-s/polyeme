@@ -26,7 +26,7 @@ import {
   tryCast,
 } from './datum';
 
-export const Preloaded = [
+export const Preloaded: [string, (i: Interpreter, a: Datum[]) => Datum][] = [
   /**************/
   // Primitives //
   /**************/
@@ -293,7 +293,7 @@ function opBoolBoolToBool(op: (a: boolean, b: boolean) => boolean) {
 // IO functions //
 /****************/
 
-function readProc(_: Interpreter, args: Datum[]) {
+function readProc(_: Interpreter, args: Datum[]): Datum {
   if (args.length === 0) {
     return {
       kind: DatumKind.String,
@@ -314,7 +314,7 @@ function readProc(_: Interpreter, args: Datum[]) {
   };
 }
 
-function writeProc(_: Interpreter, args: Datum[]) {
+function writeProc(_: Interpreter, args: Datum[]): Datum {
   if (args.length === 1) {
     const str = cast<String>(args[0], DatumKind.String);
     getStdout().write(str.value);
@@ -333,7 +333,7 @@ function writeProc(_: Interpreter, args: Datum[]) {
   return mkVoid();
 }
 
-function openInputFile(_: Interpreter, args: Datum[]) {
+function openInputFile(_: Interpreter, args: Datum[]): Datum {
   ensureCount(args, 1);
   const file = cast<String>(args[0], DatumKind.String);
 
@@ -343,7 +343,7 @@ function openInputFile(_: Interpreter, args: Datum[]) {
   };
 }
 
-function openOutputFile(_: Interpreter, args: Datum[]) {
+function openOutputFile(_: Interpreter, args: Datum[]): Datum {
   ensureCount(args, 1);
   const file = cast<String>(args[0], DatumKind.String);
 
@@ -353,13 +353,13 @@ function openOutputFile(_: Interpreter, args: Datum[]) {
   };
 }
 
-function closePort(_: Interpreter, args: Datum[]) {
+function closePort(_: Interpreter, args: Datum[]): Datum {
   ensureCount(args, 1);
   cast<Port>(args[0], DatumKind.Port).value.destroy();
   return mkVoid();
 }
 
-function readContents(_: Interpreter, args: Datum[]) {
+function readContents(_: Interpreter, args: Datum[]): Datum {
   ensureCount(args, 1);
 
   const file = tryCast<String>(args[0], DatumKind.String);

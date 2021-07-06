@@ -5,6 +5,7 @@ import { bold, green, magenta, red } from 'chalk';
 import { Parser, ParsingError } from './source/parser';
 import { Interpreter, RuntimeError } from './source/eval';
 import { Datum, toString } from './source/datum';
+import { Preloaded } from './source/preloaded';
 
 const VERSION = '0.1.0';
 
@@ -19,8 +20,10 @@ const INTERP = new Interpreter();
 
 console.log(magenta(`Polyeme JS -- ${VERSION}`));
 
+INTERP.preload(Preloaded);
+
 if (process.argv.length > 3) {
-  RL.write(red('Error: too many arguments given'));
+  console.log(red('Error: too many arguments given'));
   process.exit(1);
 }
 
@@ -31,7 +34,7 @@ if (process.argv.length === 3) {
 
   if (parsed instanceof ParsingError) {
     for (const parseError of (parsed as ParsingError[])) {
-      RL.write(red(`Error while parsing: ${parseError.description}.\n`));
+      console.log(red(`Error while parsing: ${parseError.description}.\n`));
     }
 
     process.exit(1);
@@ -41,7 +44,7 @@ if (process.argv.length === 3) {
     const result = INTERP.evaluate(expr);
 
     if (result instanceof RuntimeError) {
-      RL.write(red(`Error while executing: ${result.description}.\n`));
+      console.log(red(`Error while executing: ${result.description}.\n`));
       process.exit(1);
     }
   }
@@ -54,19 +57,18 @@ const runRepl = () => {
     const parsed = PARSER.parseLine(line);
 
     if (parsed instanceof ParsingError) {
-      RL.write(red(`Error while parsing: ${parsed.description}.\n`));
+      console.log(red(`Error while parsing: ${parsed.description}.\n`));
       return runRepl();
     }
 
     const result = INTERP.evaluate(parsed);
 
     if (result instanceof RuntimeError) {
-      RL.write(red(`Error while executing: ${result.description}.\n`));
+      console.log(red(`Error while executing: ${result.description}.\n`));
       return runRepl();
     }
 
-    RL.write(bold(toString(result)));
-    RL.write('\n');
+    console.log(bold(toString(result)));
     runRepl();
   }));
 };

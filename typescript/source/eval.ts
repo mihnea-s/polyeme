@@ -2,6 +2,7 @@ import {
   Datum,
   DatumKind,
   Environment,
+  JSFunction,
   pair,
   Pair,
   Procedure,
@@ -9,11 +10,11 @@ import {
 } from './datum';
 
 export class RuntimeError {
-  constructor(public description: string) {}
+  constructor(public description: string) { }
 }
 
 export class Interpreter {
-  constructor(private env = [new Environment()]) {}
+  constructor(private env = [new Environment()]) { }
 
   private applyProc(fn: Procedure, args: Datum[]): Datum {
     if (fn.parameters.length < args.length) {
@@ -115,6 +116,19 @@ export class Interpreter {
 
       default:
         throw new RuntimeError('invalid interpreter state');
+    }
+  }
+
+  /**
+   * Preload custom JavaScript bindings into the runtime.
+   * @param defs list of name, function pairs to be preloaded 
+   */
+  preload(defs: [string, (i: Interpreter, a: Datum[]) => Datum][]) {
+    for (const [name, jsf] of defs) {
+      this.environment().write(name, {
+        kind: DatumKind.JSFunction,
+        value: jsf,
+      });
     }
   }
 
