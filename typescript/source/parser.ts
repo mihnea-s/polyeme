@@ -82,7 +82,7 @@ export class Parser {
     } else if (this.follows('#(')) {
       let vec = new Array();
 
-      while (!this.follows(')', ']')) {
+      while (!this.follows(')')) {
         vec.push(this.expression());
       }
 
@@ -108,11 +108,18 @@ export class Parser {
     if (matches = /^((?:0x|b)?[\da-f]+)/.exec(this.buffer)) {
       this.forward(matches[0].length);
 
-      // ! TODO
+      let value = 0;
+
+      if (matches[1].startsWith('0b')) {
+        const str = matches[1].substring('0b'.length);
+        value = Number.parseInt(str, 2);
+      } else {
+        value = Number.parseInt(matches[1]);
+      }
 
       return {
         kind: DatumKind.Integer,
-        value: 0,
+        value: value,
       };
     }
 
