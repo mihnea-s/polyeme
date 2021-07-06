@@ -1,10 +1,8 @@
-import { DatumKind } from './datum';
+import { DatumKind, Datum } from './datum';
 import { Parser } from './parser';
 
-test('test parser', () => {
-  const parser = new Parser();
-
-  expect(parser.parseLine('#(1 0b10 0xf0 2,6)')).toEqual({
+const cases: [string, Datum][] = [
+  ['#(1 0b10 0xf0 2,6)', {
     kind: DatumKind.Vector,
     value: [
       {
@@ -24,9 +22,9 @@ test('test parser', () => {
         value: 2.6,
       },
     ],
-  });
+  }],
 
-  expect(parser.parseLine('(quote a b)')).toEqual({
+  ['(quote a b)', {
     kind: DatumKind.Pair,
     left: {
       kind: DatumKind.Symbol,
@@ -49,5 +47,39 @@ test('test parser', () => {
         },
       },
     }
-  });
+  }],
+
+
+  ['\'(a b)', {
+    kind: DatumKind.Pair,
+    left: {
+      kind: DatumKind.Symbol,
+      value: 'quote'
+    },
+    right: {
+      kind: DatumKind.Pair,
+      left: {
+        kind: DatumKind.Symbol,
+        value: 'a'
+      },
+      right: {
+        kind: DatumKind.Pair,
+        left: {
+          kind: DatumKind.Symbol,
+          value: 'b',
+        }, right: {
+          kind: DatumKind.Symbol,
+          value: '()',
+        },
+      },
+    }
+  }],
+];
+
+test('test parser', () => {
+  const parser = new Parser();
+
+  for (const [source, datum] of cases) {
+    expect(parser.parseLine(source)).toEqual(datum);
+  }
 });
