@@ -55,7 +55,7 @@ if (process.argv.length === 3) {
 const runRepl = (buffer = '', indent = 0) => {
   RL.question(green(indent == 0 ? '> ' : '| '), (line => {
     buffer += line + '\n';
-    indent += (line.match(/\(/) ?? []).length - (line.match(/\)/) ?? []).length;
+    indent += [...line.matchAll(/\(/g)].length - [...line.matchAll(/\)/g)].length;
 
     if (indent > 0) {
       return runRepl(buffer, indent);
