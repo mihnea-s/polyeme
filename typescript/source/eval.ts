@@ -2,11 +2,17 @@ import {
   Datum,
   DatumKind,
   Environment,
+  isTruthy,
+  Symbol,
+  isFalsy,
   mkJSFunction,
+  mkVoid,
   pair,
   Pair,
   Procedure,
   unpair,
+  cast,
+  mkProcedure,
 } from './datum';
 
 export class RuntimeError {
@@ -15,6 +21,19 @@ export class RuntimeError {
 
 export class Interpreter {
   constructor(private env = [new Environment()]) { }
+
+  private unpairExact(datum: Datum, count: number): [...Datum[]] {
+    const unpaired = unpair(datum);
+
+    if (unpaired.length != count) {
+      throw new RuntimeError(
+        `expectd ${count} arguments for special form,`
+        + ` got ${unpaired.length}`
+      );
+    }
+
+    return unpaired;
+  }
 
   private applyProc(fn: Procedure, args: Datum[]): Datum {
     if (fn.parameters.length < args.length) {
@@ -45,6 +64,129 @@ export class Interpreter {
     }
   }
 
+  private specialFormLambda(datum: Datum): Datum {
+    let [params, ...body] = unpair(datum);
+
+    if (!params) {
+      throw new RuntimeError('invalid lambda special form');
+    }
+
+    return this.evalLambda(params, body);
+  }
+
+  private specialFormIf(datum: Datum): Datum {
+    const [cond, then, alt] = this.unpairExact(datum, 3);
+
+    if (isTruthy(this.tryEvaluate(cond))) {
+      return this.tryEvaluate(then);
+    } else {
+      return this.tryEvaluate(alt);
+    }
+  }
+
+  private specialFormWhen(datum: Datum): Datum {
+    const [cond, then] = this.unpairExact(datum, 2);
+
+    if (isTruthy(this.tryEvaluate(cond))) {
+      return this.tryEvaluate(then);
+    } else {
+      return mkVoid();
+    }
+  }
+
+  private specialFormUnless(datum: Datum): Datum {
+    const [cond, alt] = this.unpairExact(datum, 2);
+
+    if (isFalsy(this.tryEvaluate(cond))) {
+      return this.tryEvaluate(alt);
+    } else {
+      return mkVoid();
+    }
+  }
+
+  private specialFormCond(datum: Datum): Datum {
+    const conds = unpair(datum);
+
+    if (conds.length % 2 !== 0) {
+      throw new RuntimeError('cond requires even number of arguments');
+    }
+
+    for (const [cond, conseq] of
+      [...Array(conds.length / 2).keys()]
+        .map(i => [conds[2 * i], conds[2 * i + 1]])
+    ) {
+      const condIsTrue =
+        (cond.kind === DatumKind.Symbol && cond.value === 'else')
+        || isTruthy(this.tryEvaluate(cond));
+
+      if (condIsTrue) {
+        return this.tryEvaluate(conseq);
+      }
+    }
+
+    return mkVoid();
+  }
+
+  private specialFormLet(datum: Datum): Datum {
+    const [bindingsVar, ...body] = unpair(datum);
+
+    if (!bindingsVar) {
+      throw new RuntimeError('invalid let special form');
+    }
+
+    const bindings = unpair(bindingsVar);
+
+    const letEnv = this.environment().extend(
+      [...Array(bindings.length / 2).keys()]
+        .map(i => [bindings[2 * i], bindings[2 * i + 1]])
+        .map(([name, value]) => [cast<Symbol>(name, DatumKind.Symbol).value, value])
+    );
+
+    this.env.push(letEnv);
+
+    let value = body
+      .map(expr => this.tryEvaluate(expr))
+      .reduce((_, v) => v);
+
+    this.env.pop();
+
+    return value;
+  }
+
+  private specialFormDef(datum: Datum): Datum {
+    let [name, value] = this.unpairExact(datum, 2);
+
+    this.environment().write(
+      cast<Symbol>(name, DatumKind.Symbol).value, value
+    );
+
+    return mkVoid();
+  }
+
+  private specialFormDefn(datum: Datum): Datum {
+    let [name, params, ...body] = unpair(datum);
+
+    if (!(name && params)) {
+      throw new RuntimeError('invalid defn special form');
+    }
+
+    this.environment().write(
+      cast<Symbol>(name, DatumKind.Symbol).value,
+      this.evalLambda(params, body),
+    );
+
+    return mkVoid();
+  }
+
+  private evalLambda(params: Datum, body: Datum[]): Datum {
+    const closure = this.environment();
+    const paramNames = unpair(params).map(
+      param => cast<Symbol>(param, DatumKind.Symbol).value
+    );
+
+    return mkProcedure(body, null, paramNames, closure);
+  }
+
   private evalPair(pair: Pair): Datum {
     if (pair.left.kind === DatumKind.Procedure) {
       return this.applyProc(
@@ -58,35 +200,49 @@ export class Interpreter {
     }
 
     switch (pair.left.value) {
-      case 'quote':
+      case 'quote': {
         return pair.right;
+      }
 
-      case 'if':
-        throw new RuntimeError('undefined');
+      case 'lambda': {
+        return this.specialFormLambda(pair.right);
+      }
 
-      case 'when':
-        throw new RuntimeError('undefined');
+      case 'if': {
+        return this.specialFormIf(pair.right);
+      }
 
-      case 'unless':
-        throw new RuntimeError('undefined');
+      case 'when': {
+        return this.specialFormWhen(pair.right);
+      }
 
-      case 'cond':
-        throw new RuntimeError('undefined');
+      case 'unless': {
+        return this.specialFormUnless(pair.right);
+      }
 
-      case 'case':
-        throw new RuntimeError('undefined');
+      case 'cond': {
+        return this.specialFormCond(pair.right);
+      }
 
-      case 'let':
-        throw new RuntimeError('undefined');
+      case 'case': {
+        throw new RuntimeError('unimplemented');
+      }
 
-      case 'def':
-        throw new RuntimeError('undefined');
+      case 'let': {
+        return this.specialFormLet(pair.right);
+      }
 
-      case 'defn':
-        throw new RuntimeError('undefined');
+      case 'def': {
+        return this.specialFormDef(pair.right);
+      }
 
-      case 'defmacro':
-        throw new RuntimeError('undefined');
+      case 'defn': {
+        return this.specialFormDefn(pair.right);
+      }
+
+      case 'defmacro': {
+        throw new RuntimeError('unimplemented');
+      }
     }
 
     const fn = this.environment().read(pair.left.value);

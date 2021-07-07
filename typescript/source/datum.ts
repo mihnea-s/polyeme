@@ -141,11 +141,19 @@ export interface Procedure {
 }
 
 /**
- * Check if a value is truthy or falsy, only false booleans
- * are falsy.
+ * Check if a value is truthy, all values except false
+ * booleans are truthy.
  */
 export function isTruthy(datum: Datum): boolean {
-  return !(datum.kind == DatumKind.Boolean && datum.value == false);
+  return !isFalsy(datum);
+}
+
+/**
+ * Check if a value is falsy, only false booleans
+ * are falsy.
+ */
+export function isFalsy(datum: Datum): boolean {
+  return datum.kind == DatumKind.Boolean && datum.value == false;
 }
 
 export function tryCast<T extends Datum>(datum: Datum, kind: T['kind']): T | null {

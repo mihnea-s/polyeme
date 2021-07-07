@@ -3,18 +3,12 @@
 ## Todo
 
 - [ ] Language features
-  - [ ] `(if ... )`
-  - [ ] `(when ...)`
-  - [ ] `(unless ...)`
-  - [ ] `(cond ... (...))`
+  - [ ] Var params
   - [ ] `(case ... (...))`
-  - [ ] `(let [...] ...)`
-  - [ ] `(def ... (...))`
-  - [ ] `(defn ... (...))`
   - [ ] `(defmacro ...)`
   - [ ] Continuations
-- [ ] Preloaded
 - [ ] Parser
+  - [ ] Var params
   - [ ] Comments
   - [ ] Dotted lists
   - [ ] Quasiquotes
