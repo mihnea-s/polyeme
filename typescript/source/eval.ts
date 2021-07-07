@@ -36,7 +36,7 @@ export class Interpreter {
   }
 
   private applyProc(fn: Procedure, args: Datum[]): Datum {
-    if (fn.parameters.length < args.length) {
+    if (args.length < fn.parameters.length) {
       throw new RuntimeError('functional call with too few arguments');
     }
 
