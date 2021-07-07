@@ -448,14 +448,76 @@ function strLenProc(_: Interpreter, args: Datum[]): Datum {
 }
 
 function strSubstringProc(_: Interpreter, args: Datum[]): Datum {
+  const [str, start, end] = readArguments<[String, Integer, Integer]>(args, [
+    DatumKind.String, DatumKind.Integer, DatumKind.Integer
+  ]);
+
+  if (start.value < 0 || str.value.length >= start.value) {
+    throw new RuntimeError(
+      `start value '${start.value}' out of bounds of string`
+      + ` with ${str.value.length} characters`
+    );
+  }
+
+  if (end.value < 0 || str.value.length >= end.value) {
+    throw new RuntimeError(
+      `end value '${end.value}' out of bounds of string`
+      + ` with ${str.value.length} characters`
+    );
+  }
+
+  if (start > end) {
+    throw new RuntimeError(
+      `substring range '${start.value}' to '${end.value}' is invalid`
+    );
+  }
+
+  return mkString(str.value.substring(start.value, end.value));
+}
+
+function strSetProc(interp: Interpreter, args: Datum[]): Datum {
+  const [name, idx, char] = readArguments<[Symbol, Integer, Character]>(args, [
+    DatumKind.Symbol, DatumKind.Integer, DatumKind.Character
+  ]);
+
+  const str = cast<String>(
+    interp.environment().read(name.value),
+    DatumKind.String
+  );
+
+  if (idx.value >= str.value.length) {
+    throw new RuntimeError(
+      `index '${idx.value}' out of bounds of string`
+      + ` with ${str.value.length} characters`
+    );
+  }
+
+  const newStr = mkString(
+    str.value.substring(0, idx.value)
+    + String.fromCharCode(char.value)
+    + str.value.substring(idx.value + 1)
+  );
+
+  interp.environment().write(name.value, newStr);
+
   return mkVoid();
 }
 
-function strSetProc(_: Interpreter, args: Datum[]): Datum {
-  return mkVoid();
-}
+function strFillProc(interp: Interpreter, args: Datum[]): Datum {
+  const [name, char] = readArguments<[Symbol, Character]>(args, [
+    DatumKind.Symbol, DatumKind.Character
+  ]);
 
-function strFillProc(_: Interpreter, args: Datum[]): Datum {
+  const str = cast<String>(
+    interp.environment().read(name.value),
+    DatumKind.String
+  );
+
+  // JS's strings are immutable so we have to fake it.
+  interp.environment().write(name.value, mkString(
+    String.fromCharCode(char.value).repeat(str.value.length)
+  ));
+
   return mkVoid();
 }
 
@@ -499,10 +561,15 @@ function vecLenProc(_: Interpreter, args: Datum[]): Datum {
   return mkInteger(vec.value.length);
 }
 
-function vecSetProc(_: Interpreter, args: Datum[]): Datum {
-  const [vec, idx, value] = readArguments<[Vector, Integer, Datum]>(args, [
-    DatumKind.Vector, DatumKind.Integer, null
+function vecSetProc(interp: Interpreter, args: Datum[]): Datum {
+  const [name, idx, value] = readArguments<[Symbol, Integer, Datum]>(args, [
+    DatumKind.Symbol, DatumKind.Integer, null
   ]);
+
+  const vec = cast<Vector>(
+    interp.environment().read(name.value),
+    DatumKind.Vector
+  );
 
   if (idx.value >= vec.value.length) {
     throw new RuntimeError(
@@ -511,13 +578,19 @@ function vecSetProc(_: Interpreter, args: Datum[]): Datum {
     );
   }
 
-  return (vec.value[idx.value] = value);
+  vec.value[idx.value] = value;
+  return mkVoid();
 }
 
-function vecFillProc(_: Interpreter, args: Datum[]): Datum {
-  const [vec, value] = readArguments<[Vector, Datum]>(args, [
-    DatumKind.Vector, null
+function vecFillProc(interp: Interpreter, args: Datum[]): Datum {
+  const [name, value] = readArguments<[Symbol, Datum]>(args, [
+    DatumKind.Symbol, null
   ]);
+
+  const vec = cast<Vector>(
+    interp.environment().read(name.value),
+    DatumKind.Vector
+  );
 
   vec.value.fill(value);
   return mkVoid();
@@ -545,10 +618,16 @@ function hashAtProc(_: Interpreter, args: Datum[]): Datum {
   return value;
 }
 
-function hashSetProc(_: Interpreter, args: Datum[]): Datum {
-  const [hash, key, value] = readArguments<[Hash, Datum, Datum]>(args, [
-    DatumKind.Hash, null, null
+function hashSetProc(interp: Interpreter, args: Datum[]): Datum {
+  const [name, key, value] = readArguments<[Symbol, Datum, Datum]>(args, [
+    DatumKind.Symbol, null, null
   ]);
+
+  // Read hash from environment
+  const hash = cast<Hash>(
+    interp.environment().read(name.value),
+    DatumKind.Hash
+  );
 
   hash.value.set(key, value);
   return mkVoid();
