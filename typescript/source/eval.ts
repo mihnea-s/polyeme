@@ -34,7 +34,7 @@ export class Interpreter {
 
     this.env.push(fn.closure.extend(params));
 
-    let returnValue = fn.body.map(this.tryEvaluate).reverse().shift();
+    let returnValue = fn.body.map((d) => this.tryEvaluate(d)).reverse().shift();
 
     this.env.pop();
 
@@ -49,7 +49,7 @@ export class Interpreter {
     if (pair.left.kind === DatumKind.Procedure) {
       return this.applyProc(
         pair.left,
-        unpair(pair.right).map(this.tryEvaluate)
+        unpair(pair.right).map((d) => this.tryEvaluate(d))
       );
     }
 
@@ -98,12 +98,12 @@ export class Interpreter {
     let args = unpair(pair.right);
 
     if (!pair.left.value.endsWith('!')) {
-      args = args.map(this.tryEvaluate);
+      args = args.map((d) => this.tryEvaluate(d));
     } else {
       if (args.length == 0 && args[0].kind !== DatumKind.Symbol) {
         throw new RuntimeError('invalid arguments for setter');
       } else {
-        args = [args[0], ...args.slice(1).map(this.tryEvaluate)];
+        args = [args[0], ...args.slice(1).map((d) => this.tryEvaluate(d))];
       }
     }
 
