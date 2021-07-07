@@ -100,7 +100,7 @@ export class Interpreter {
     if (!pair.left.value.endsWith('!')) {
       args = args.map((d) => this.tryEvaluate(d));
     } else {
-      if (args.length == 0 && args[0].kind !== DatumKind.Symbol) {
+      if (args.length == 0 || args[0].kind !== DatumKind.Symbol) {
         throw new RuntimeError('invalid arguments for setter');
       } else {
         args = [args[0], ...args.slice(1).map((d) => this.tryEvaluate(d))];

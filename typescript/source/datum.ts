@@ -109,7 +109,7 @@ export class Environment {
 
   modify(name: string, datum: Datum): Datum {
     if (!this.env.has(name)) {
-      throw new RuntimeError(`undefined variable '${name}'`);
+      throw new RuntimeError(`immutable '${name}'`);
     }
 
     this.env.set(name, datum);

@@ -20,8 +20,11 @@ import {
   Datum,
   DatumKind,
   Environment,
+  Hash,
   Integer,
   mkBoolean,
+  mkCharacter,
+  mkHash,
   mkInteger,
   mkPair,
   mkPort,
@@ -412,19 +415,36 @@ function strEmptyProc(_: Interpreter, args: Datum[]): Datum {
 }
 
 function strAtProc(_: Interpreter, args: Datum[]): Datum {
-  return mkVoid();
+  const [str, idx] = readArguments<[String, Integer]>(args, [
+    DatumKind.String, DatumKind.Integer,
+  ]);
+
+  if (idx.value >= str.value.length) {
+    throw new RuntimeError(
+      `index '${idx.value}' out of bounds of string`
+      + ` with ${str.value.length} characters`
+    );
+  }
+
+  return mkCharacter(str.value.charAt(idx.value));
 }
 
 function strAppendProc(_: Interpreter, args: Datum[]): Datum {
-  return mkVoid();
+  const [a, b] = readArguments<[String, String]>(args, [
+    DatumKind.String, DatumKind.String,
+  ]);
+
+  return mkString(a.value + b.value);
 }
 
 function strNewlineProc(_: Interpreter, args: Datum[]): Datum {
-  return mkVoid();
+  const [str] = readArguments<[String]>(args, [DatumKind.String]);
+  return mkString(str + '\n');
 }
 
 function strLenProc(_: Interpreter, args: Datum[]): Datum {
-  return mkVoid();
+  const [str] = readArguments<[String]>(args, [DatumKind.String]);
+  return mkInteger(str.value.length);
 }
 
 function strSubstringProc(_: Interpreter, args: Datum[]): Datum {
@@ -508,23 +528,40 @@ function vecFillProc(_: Interpreter, args: Datum[]): Datum {
 /******************/
 
 function hashEmptyProc(_: Interpreter, args: Datum[]): Datum {
-  return mkVoid();
+  return mkHash();
 }
 
 function hashAtProc(_: Interpreter, args: Datum[]): Datum {
-  return mkVoid();
+  const [hash, key] = readArguments<[Hash, Datum]>(args, [
+    DatumKind.Hash, null
+  ]);
+
+  const value = hash.value.get(hash);
+
+  if (!value) {
+    throw new RuntimeError(`hash does not contain key '${toString(key)}'`);
+  }
+
+  return value;
 }
 
 function hashSetProc(_: Interpreter, args: Datum[]): Datum {
+  const [hash, key, value] = readArguments<[Hash, Datum, Datum]>(args, [
+    DatumKind.Hash, null, null
+  ]);
+
+  hash.value.set(key, value);
   return mkVoid();
 }
 
 function hashKeysProc(_: Interpreter, args: Datum[]): Datum {
-  return mkVoid();
+  const [hash] = readArguments<[Hash]>(args, [DatumKind.Hash]);
+  return mkVector(...hash.value.keys());
 }
 
 function hashValsProc(_: Interpreter, args: Datum[]): Datum {
-  return mkVoid();
+  const [hash] = readArguments<[Hash]>(args, [DatumKind.Hash]);
+  return mkVector(...hash.value.values());
 }
 
 /******************/
