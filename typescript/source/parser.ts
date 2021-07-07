@@ -209,6 +209,7 @@ export class Parser {
         exprs.push(this.expression());
       } catch (error) {
         errors.push(error);
+        this.forward(this.buffer.indexOf('\n'));
       }
     };
 

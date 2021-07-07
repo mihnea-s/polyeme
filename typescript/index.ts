@@ -32,7 +32,7 @@ if (process.argv.length === 3) {
 
   const parsed = PARSER.parseLines(file);
 
-  if (parsed instanceof ParsingError) {
+  if (parsed[0] instanceof ParsingError) {
     for (const parseError of (parsed as ParsingError[])) {
       console.log(red(`Error while parsing: ${parseError.description}.`));
     }
