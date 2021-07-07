@@ -813,32 +813,35 @@ function strToSymProc(_: Interpreter, args: Datum[]): Datum {
 
 function strToIntProc(_: Interpreter, args: Datum[]): Datum {
   const [str] = readArguments<[String]>(args, [DatumKind.String]);
-  // TODO!
-  return mkVoid();
+  return mkInteger(Number.parseInt(str.value));
 }
 
 function strToRealProc(_: Interpreter, args: Datum[]): Datum {
   const [str] = readArguments<[String]>(args, [DatumKind.String]);
-  // TODO!
-  return mkVoid();
+  return mkReal(Number.parseFloat(str.value));
 }
 
 function strToVecProc(_: Interpreter, args: Datum[]): Datum {
-  // TODO!
   const [str] = readArguments<[String]>(args, [DatumKind.String]);
-  return mkVoid();
+  return mkVector(
+    ...Array.from(str.value)
+      .map(c => c.charCodeAt(0))
+      .map(mkCharacter)
+  );
 }
 
 function vecToStrProc(_: Interpreter, args: Datum[]): Datum {
   const [vec] = readArguments<[Vector]>(args, [DatumKind.Vector]);
-  // TODO!
-  return mkVoid();
+  return mkString(vec.value
+    .map(d => cast<Character>(d, DatumKind.Character))
+    .map(c => String.fromCharCode(c.value))
+    .join('')
+  );
 }
 
 function vecToListProc(_: Interpreter, args: Datum[]): Datum {
   const [vec] = readArguments<[Vector]>(args, [DatumKind.Vector]);
-  // TODO!
-  return mkVoid();
+  return pair(vec.value);
 }
 
 function hashToVecProc(_: Interpreter, args: Datum[]): Datum {
