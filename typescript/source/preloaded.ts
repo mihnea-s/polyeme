@@ -464,7 +464,7 @@ function vecAtProc(_: Interpreter, args: Datum[]): Datum {
     DatumKind.Vector, DatumKind.Integer,
   ]);
 
-  if (vec.value.length >= idx.value) {
+  if (idx.value >= vec.value.length) {
     throw new RuntimeError(
       `index '${idx.value}' out of bounds of vector`
       + ` with ${vec.value.length} elements`
@@ -484,7 +484,7 @@ function vecSetProc(_: Interpreter, args: Datum[]): Datum {
     DatumKind.Vector, DatumKind.Integer, null
   ]);
 
-  if (vec.value.length >= idx.value) {
+  if (idx.value >= vec.value.length) {
     throw new RuntimeError(
       `index '${idx.value}' out of bounds of vector`
       + ` with ${vec.value.length} elements`
