@@ -187,16 +187,107 @@ export function unpair(datum: Datum): Datum[] {
 }
 
 export function mkVoid(): Void {
-  return {
+  return Object.freeze({
     kind: DatumKind.Void
-  };
+  });
+}
+
+export function mkNil(): Symbol {
+  return Object.freeze({
+    kind: DatumKind.Symbol,
+    value: '()',
+  });
 }
 
 export function mkSymbol(value: string): Symbol {
-  return {
+  return Object.freeze({
     value,
     kind: DatumKind.Symbol,
+  });
+}
+
+export function mkBoolean(value: boolean): Boolean {
+  return Object.freeze({
+    value,
+    kind: DatumKind.Boolean,
+  });
+}
+
+export function mkCharacter(value: number | string): Character {
+  return Object.freeze({
+    kind: DatumKind.Character,
+    value: typeof value == 'number' ? value : value.charCodeAt(0),
+  });
+}
+
+export function mkInteger(value: number): Integer {
+  return Object.freeze({
+    kind: DatumKind.Integer,
+    value: Math.floor(value),
+  });
+}
+
+export function mkReal(value: number): Real {
+  return Object.freeze({
+    value,
+    kind: DatumKind.Real,
+  });
+}
+
+export function mkString(value: string): String {
+  return Object.freeze({
+    value: value,
+    kind: DatumKind.String,
+  });
+}
+
+export function mkVector(...values: Datum[]): Vector {
+  return {
+    kind: DatumKind.Vector,
+    value: values,
   };
+}
+
+export function mkHash(...values: [Datum, Datum][]): Hash {
+  return {
+    kind: DatumKind.Hash,
+    value: new Map(values),
+  };
+}
+
+export function mkPort(value: ReadPort | WritePort | ReadWritePort): Port {
+  return {
+    value,
+    kind: DatumKind.Port,
+  };
+}
+
+export function mkPair(left: Datum, right: Datum): Pair {
+  return Object.freeze({
+    left, right,
+    kind: DatumKind.Pair,
+  });
+}
+
+export function mkJSFunction(
+  value: (env: Interpreter, args: Array<Datum>) => Datum
+): JSFunction {
+  return Object.freeze({
+    value,
+    kind: DatumKind.JSFunction,
+  });
+}
+
+export function mkProcedure(
+  body: Array<Datum>,
+  varParam: string | null,
+  parameters: Array<string>,
+  closure: Environment,
+): Procedure {
+  return Object.freeze({
+    body, varParam, parameters, closure,
+    kind: DatumKind.Procedure,
+  });
 }
 
 export function toString(datum: Datum): string {

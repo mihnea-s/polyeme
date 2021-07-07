@@ -1,4 +1,16 @@
-import { Datum, DatumKind } from './datum';
+import {
+  Datum,
+  DatumKind,
+  mkBoolean,
+  mkCharacter,
+  mkInteger,
+  mkNil,
+  mkPair,
+  mkReal,
+  mkString,
+  mkSymbol,
+  mkVector
+} from './datum';
 
 export class ParsingError {
   constructor(
@@ -58,41 +70,28 @@ export class Parser {
   private expression(): Datum {
     this.buffer = this.buffer.trimLeft();
 
-    // handle quoting
-    if (this.follows('\'')) {
-      const expr = this.expression();
-      return {
-        kind: DatumKind.Pair,
-        right: expr,
-        left: {
-          kind: DatumKind.Symbol,
-          value: 'quote'
-        },
-      };
+    // Handle booleans
+    if (this.follows('#t')) {
+      return mkBoolean(true);
+    } else if (this.follows('#f')) {
+      return mkBoolean(false);
     }
 
-    // handle hash literals (bool & vec)
-    if (this.follows('#t')) {
-      return {
-        kind: DatumKind.Boolean,
-        value: true,
-      };
-    } else if (this.follows('#f')) {
-      return {
-        kind: DatumKind.Boolean,
-        value: false,
-      };
-    } else if (this.follows('#(')) {
+    // Handle quoting
+    if (this.follows('\'')) {
+      const expr = this.expression();
+      return mkPair(mkSymbol('quote'), expr);
+    }
+
+    // Handle vector literals
+    if (this.follows('#(')) {
       let vec = new Array();
 
       while (!this.follows(')')) {
         vec.push(this.expression());
       }
 
-      return {
-        kind: DatumKind.Vector,
-        value: vec,
-      };
+      return mkVector(...vec);
     }
 
     let matches: RegExpExecArray | null;
@@ -100,21 +99,13 @@ export class Parser {
     // match and parse real number literals (with comma)
     if (matches = /^(\d+),(\d+)/.exec(this.buffer)) {
       this.forward(matches[0].length);
-
-      return {
-        kind: DatumKind.Real,
-        value: Number.parseFloat(matches.slice(1).join('.')),
-      };
+      return mkReal(Number.parseFloat(matches.slice(1).join('.')));
     }
 
     // match and parse hex integer literals
     if (matches = /^(0x[\da-f]+)/.exec(this.buffer)) {
       this.forward(matches[0].length);
-
-      return {
-        kind: DatumKind.Integer,
-        value: Number.parseInt(matches[1]),
-      };
+      return mkInteger(Number.parseInt(matches[1]));
     }
 
     // match and parse integer literals (including binary)
@@ -130,30 +121,19 @@ export class Parser {
         value = Number.parseInt(matches[1]);
       }
 
-      return {
-        kind: DatumKind.Integer,
-        value: value,
-      };
+      return mkInteger(value);
     }
 
     // match and capture character literals
     if (matches = /^#'(\S)/.exec(this.buffer)) {
       this.forward(matches[0].length);
-
-      return {
-        kind: DatumKind.Character,
-        value: matches[1].codePointAt(0)!,
-      };
+      return mkCharacter(matches[1].codePointAt(0)!);
     }
 
     // match and capture string literals
     if (matches = /^"([^"]*?(?:\\"[^"]*?)*?)"/.exec(this.buffer)) {
       this.forward(matches[0].length);
-
-      return {
-        kind: DatumKind.String,
-        value: matches[1].toString(),
-      };
+      return mkString(matches[1].toString());
     }
 
     // symbol regex
@@ -163,14 +143,14 @@ export class Parser {
     if (matches = symbolRegex.exec(this.buffer)) {
       const symbol = matches[0].toString();
       this.forward(symbol.length);
-
-      return {
-        kind: DatumKind.Symbol,
-        value: symbol,
-      };
+      return mkSymbol(symbol);
     }
 
     this.expect('(', '[');
+
+    if (this.follows(')', ']')) {
+      return mkNil();
+    }
 
     let root: Datum = {
       kind: DatumKind.Pair,

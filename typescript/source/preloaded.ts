@@ -21,6 +21,13 @@ import {
   DatumKind,
   Environment,
   Integer,
+  mkBoolean,
+  mkInteger,
+  mkPair,
+  mkPort,
+  mkReal,
+  mkString,
+  mkVector,
   mkVoid,
   Pair,
   pair,
@@ -29,7 +36,6 @@ import {
   String,
   Symbol,
   toString,
-  tryCast,
   Vector,
 } from './datum';
 
@@ -280,14 +286,8 @@ function evalFn(interp: Interpreter, args: Datum[]): Datum {
 
 function applyFn(interp: Interpreter, args: Datum[]): Datum {
   minArguments(args, 1);
-
   const [fn, fnargs] = [args[0], args.slice(1)];
-
-  return interp.tryEvaluate({
-    kind: DatumKind.Pair,
-    left: fn,
-    right: pair(fnargs),
-  });
+  return interp.tryEvaluate(mkPair(fn, pair(fnargs)));
 }
 
 function systemFn(_: Interpreter, args: Datum[]): Datum {
@@ -300,11 +300,7 @@ function systemFn(_: Interpreter, args: Datum[]): Datum {
     .map(d => cast<String>(d, DatumKind.String).value);
 
   const [stdin, stdout] = systemExec(cmd, options);
-
-  return pair([
-    { kind: DatumKind.Port, value: stdin },
-    { kind: DatumKind.Port, value: stdout },
-  ]);
+  return mkPair(mkPort(stdin), mkPort(stdout));
 }
 
 function voidFn(_: Interpreter, args: Datum[]): Datum {
@@ -322,10 +318,7 @@ function opBoolBoolToBool(op: (a: boolean, b: boolean) => boolean) {
       args, [DatumKind.Boolean, DatumKind.Boolean]
     );
 
-    return {
-      kind: DatumKind.Boolean,
-      value: op(a.value, b.value),
-    };
+    return mkBoolean(op(a.value, b.value));
   };
 }
 
@@ -366,21 +359,14 @@ function opChrChrToBool(op: (a: number, b: number) => boolean) {
       args, [DatumKind.Character, DatumKind.Character]
     );
 
-    return {
-      kind: DatumKind.Boolean,
-      value: op(a.value, b.value),
-    };
+    return mkBoolean(op(a.value, b.value));
   };
 }
 
 function opChrToBool(op: (a: number) => boolean) {
   return (_: Interpreter, args: Datum[]): Datum => {
     const [a] = readArguments<[Character]>(args, [DatumKind.Character]);
-
-    return {
-      kind: DatumKind.Boolean,
-      value: op(a.value),
-    };
+    return mkBoolean(op(a.value));
   };
 }
 
@@ -394,10 +380,7 @@ function opNumNumToNum(op: (a: number, b: number) => number) {
       args, [null, null]
     );
 
-    return {
-      kind: DatumKind.Real,
-      value: op(a.value, b.value),
-    };
+    return mkReal(op(a.value, b.value));
   };
 }
 
@@ -407,10 +390,7 @@ function opNumNumToBool(op: (a: number, b: number) => boolean) {
       args, [null, null]
     );
 
-    return {
-      kind: DatumKind.Boolean,
-      value: op(a.value, b.value),
-    };
+    return mkBoolean(op(a.value, b.value));
   };
 }
 
@@ -418,11 +398,7 @@ function opNumNumToBool(op: (a: number, b: number) => boolean) {
 function opRealToReal(op: (x: number) => number) {
   return (_: Interpreter, args: Datum[]): Datum => {
     const [x] = readArguments<[Real]>(args, [DatumKind.Real]);
-
-    return {
-      kind: DatumKind.Real,
-      value: op(x.value),
-    };
+    return mkReal(op(x.value));
   };
 }
 
@@ -432,11 +408,7 @@ function opRealToReal(op: (x: number) => number) {
 
 function strEmptyProc(_: Interpreter, args: Datum[]): Datum {
   noArguments(args);
-
-  return {
-    kind: DatumKind.String,
-    value: '',
-  };
+  return mkString('');
 }
 
 function strAtProc(_: Interpreter, args: Datum[]): Datum {
@@ -473,10 +445,7 @@ function opStrStrToBool(op: (a: string, b: string) => boolean) {
       DatumKind.String, DatumKind.String
     ]);
 
-    return {
-      kind: DatumKind.Boolean,
-      value: op(a.value, b.value),
-    };
+    return mkBoolean(op(a.value, b.value));
   };
 }
 
@@ -487,11 +456,7 @@ function opStrStrToBool(op: (a: string, b: string) => boolean) {
 
 function vecEmptyProc(_: Interpreter, args: Datum[]): Datum {
   noArguments(args);
-
-  return {
-    kind: DatumKind.Vector,
-    value: [],
-  };
+  return mkVector();
 }
 
 function vecAtProc(_: Interpreter, args: Datum[]): Datum {
@@ -511,11 +476,7 @@ function vecAtProc(_: Interpreter, args: Datum[]): Datum {
 
 function vecLenProc(_: Interpreter, args: Datum[]): Datum {
   const [vec] = readArguments<[Vector]>(args, [DatumKind.Vector]);
-
-  return {
-    kind: DatumKind.Integer,
-    value: vec.value.length,
-  };
+  return mkInteger(vec.value.length);
 }
 
 function vecSetProc(_: Interpreter, args: Datum[]): Datum {
@@ -582,21 +543,12 @@ function cdrProc(_: Interpreter, args: Datum[]): Datum {
 
 function consProc(_: Interpreter, args: Datum[]): Datum {
   const [car, cdr] = readArguments<[Datum, Datum]>(args, [null, null]);
-
-  return {
-    kind: DatumKind.Pair,
-    left: car,
-    right: cdr,
-  };
+  return mkPair(car, cdr);
 }
 
 function isNilProc(_: Interpreter, args: Datum[]): Datum {
   const [x] = readArguments<[Datum]>(args, [null]);
-
-  return {
-    kind: DatumKind.Boolean,
-    value: args[0].kind === DatumKind.Symbol && args[0].value === '()',
-  };
+  return mkBoolean(x.kind === DatumKind.Symbol && x.value === '()');
 }
 
 function listProc(_: Interpreter, args: Datum[]): Datum {
@@ -609,30 +561,18 @@ function listProc(_: Interpreter, args: Datum[]): Datum {
 
 function areEqual(_: Interpreter, args: Datum[]): Datum {
   const [a, b] = readArguments<[Datum, Datum]>(args, [null, null]);
-
-  return {
-    kind: DatumKind.Boolean,
-    value: false,
-  };
+  return mkBoolean(JSON.stringify(a) === JSON.stringify(b));
 }
 
 function areSame(_: Interpreter, args: Datum[]): Datum {
   const [a, b] = readArguments<[Datum, Datum]>(args, [null, null]);
-
-  return {
-    kind: DatumKind.Boolean,
-    value: false,
-  };
+  return mkBoolean(a === b);
 }
 
 function isOfDatumKind(kind: DatumKind) {
   return (_: Interpreter, args: Datum[]): Datum => {
     const [arg] = readArguments<[Datum]>(args, [null]);
-
-    return {
-      kind: DatumKind.Boolean,
-      value: arg.kind === kind,
-    };
+    return mkBoolean(arg.kind === kind);
   };
 }
 
@@ -643,10 +583,7 @@ function isOfDatumKind(kind: DatumKind) {
 function readProc(_: Interpreter, args: Datum[]): Datum {
   switch (args.length) {
     case 0: {
-      return {
-        kind: DatumKind.String,
-        value: getStdin().read(),
-      };
+      return mkString(getStdin().read());
     }
 
     default: {
@@ -656,11 +593,7 @@ function readProc(_: Interpreter, args: Datum[]): Datum {
         throw new RuntimeError('port is write-only');
       }
 
-      return {
-        kind: DatumKind.String,
-        value: port.value.read(),
-      };
-
+      return mkString(port.value.read());
     }
   }
 }
@@ -690,20 +623,12 @@ function writeProc(_: Interpreter, args: Datum[]): Datum {
 
 function openInputFile(_: Interpreter, args: Datum[]): Datum {
   const [file] = readArguments<[String]>(args, [DatumKind.String]);
-
-  return {
-    kind: DatumKind.Port,
-    value: openFileRead(file.value),
-  };
+  return mkPort(openFileRead(file.value));
 }
 
 function openOutputFile(_: Interpreter, args: Datum[]): Datum {
   const [file] = readArguments<[String]>(args, [DatumKind.String]);
-
-  return {
-    kind: DatumKind.Port,
-    value: openFileWrite(file.value),
-  };
+  return mkPort(openFileWrite(file.value));
 }
 
 function closePort(_: Interpreter, args: Datum[]): Datum {
@@ -717,10 +642,7 @@ function readContents(_: Interpreter, args: Datum[]): Datum {
 
   switch (input.kind) {
     case DatumKind.String: {
-      return {
-        kind: DatumKind.String,
-        value: readFileToString(input.value),
-      };
+      return mkString(readFileToString(input.value));
     }
 
     case DatumKind.Port: {
@@ -728,10 +650,7 @@ function readContents(_: Interpreter, args: Datum[]): Datum {
         throw new RuntimeError('port is write-only');
       }
 
-      return {
-        kind: DatumKind.String,
-        value: input.value.read(),
-      };
+      return mkString(input.value.read());
     }
   }
 }

@@ -2,7 +2,7 @@ import {
   Datum,
   DatumKind,
   Environment,
-  JSFunction,
+  mkJSFunction,
   pair,
   Pair,
   Procedure,
@@ -125,10 +125,7 @@ export class Interpreter {
    */
   preload(defs: [string, (i: Interpreter, a: Datum[]) => Datum][]) {
     for (const [name, jsf] of defs) {
-      this.environment().write(name, {
-        kind: DatumKind.JSFunction,
-        value: jsf,
-      });
+      this.environment().write(name, mkJSFunction(jsf));
     }
   }
 
