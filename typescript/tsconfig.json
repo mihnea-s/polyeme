@@ -13,6 +13,7 @@
     "rootDir": ".",
     "module": "CommonJS",
     "target": "ES2020",
+    "sourceMap": true,
     "moduleResolution": "node"
   },
 }

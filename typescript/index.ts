@@ -52,21 +52,16 @@ if (process.argv.length === 3) {
   process.exit(0);
 }
 
-const runRepl = (indent: number = 0) => {
-  let buffer: string = '';
-
+const runRepl = (buffer = '', indent = 0) => {
   RL.question(green(indent == 0 ? '> ' : '| '), (line => {
-    buffer += line;
+    buffer += line + '\n';
     indent += (line.match(/\(/) ?? []).length - (line.match(/\)/) ?? []).length;
 
     if (indent > 0) {
-      return runRepl(indent);
-    } else {
-      line = buffer;
-      buffer = '';
+      return runRepl(buffer, indent);
     }
 
-    const parsed = PARSER.parseLine(line);
+    const parsed = PARSER.parseLine(buffer);
 
     if (parsed instanceof ParsingError) {
       console.log(red(`Error while parsing: ${parsed.description}.`));

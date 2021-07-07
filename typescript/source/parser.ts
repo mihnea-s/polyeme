@@ -43,9 +43,10 @@ export class Parser {
    */
   private follows(...args: string[]): boolean {
     for (const prefix of args) {
-      if (!this.buffer.startsWith(prefix)) continue;
-      this.buffer = this.buffer.substring(prefix.length);
-      return true;
+      if (this.buffer.startsWith(prefix)) {
+        this.forward(prefix.length);
+        return true;
+      }
     }
 
     return false;
