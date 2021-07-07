@@ -107,6 +107,15 @@ export class Environment {
     return datum;
   }
 
+  modify(name: string, datum: Datum): Datum {
+    if (!this.env.has(name)) {
+      throw new RuntimeError(`undefined variable '${name}'`);
+    }
+
+    this.env.set(name, datum);
+    return datum;
+  }
+
   extend(vars: [string, Datum][]): Environment {
     let newEnv = new Map(this.env);
 

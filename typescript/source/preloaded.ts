@@ -193,8 +193,8 @@ type DatumKinds<T extends [...Datum[]]> = { length: T['length'] } & {
 function noArguments(args: Datum[]) {
   if (args.length > 0) {
     throw new RuntimeError(
-      `function called with ${args.length} argument(s)`
-      + ' but expected none'
+      `function called with ${args.length} argument(s):`
+      + `${args.map(toString).join(', ')} but expected none`
     );
   }
 }
@@ -237,7 +237,7 @@ function setFn(interp: Interpreter, args: Datum[]): Datum {
     DatumKind.Symbol, null
   ]);
 
-  return interp.environment().write(name.value, value);
+  return interp.environment().modify(name.value, value);
 }
 
 function exitFn(_: Interpreter, args: Datum[]): Datum {
