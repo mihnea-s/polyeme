@@ -20,14 +20,17 @@ import {
   Datum,
   DatumKind,
   Environment,
+  Integer,
   mkVoid,
   Pair,
   pair,
   Port,
+  Real,
   String,
   Symbol,
   toString,
   tryCast,
+  Vector,
 } from './datum';
 
 export const Preloaded: [string, (i: Interpreter, a: Datum[]) => Datum][] = [
@@ -66,65 +69,65 @@ export const Preloaded: [string, (i: Interpreter, a: Datum[]) => Datum][] = [
   /*********************/
   // Numeric functions //
   /*********************/
-  // ("-", opNumNumNum(-)),
-  // ("+", opNumNumNum(+)),
-  // ("*", opNumNumNum(*)),
-  // ("/", numDivision AsReal),
-  // ("//", numDivision AsInt),
-  // ("mod", numDivision AsReminder),
-  // ("=?", opNumNumBool(==)),
-  // ("<?", opNumNumBool(<)),
-  // (">?", opNumNumBool(>)),
-  // ("/=?", opNumNumBool(/=)),
-  // (">=?", opNumNumBool(>=)),
-  // ("<=?", opNumNumBool(<=)),
-  // ("ceil", opRealReal(ceiling)),
-  // ("floor", opRealReal(floor)),
-  // ("trunc", opRealReal(truncate)),
-  // ("round", opRealReal(round)),
-  // ("exp", opRealReal(exp)),
-  // ("log", opRealReal(log)),
-  // ("sin", opRealReal(sin)),
-  // ("cos", opRealReal(cos)),
-  // ("tan", opRealReal(tan)),
-  // ("asin", opRealReal(asin)),
-  // ("acos", opRealReal(acos)),
-  // ("atan", opRealReal(atan)),
+  ['-', opNumNumToNum((a, b) => a - b)],
+  ['+', opNumNumToNum((a, b) => a + b)],
+  ['*', opNumNumToNum((a, b) => a * b)],
+  ['/', opNumNumToNum((a, b) => a / b)],
+  ['//', opNumNumToNum((a, b) => Math.floor(a / b))],
+  ['mod', opNumNumToNum((a, b) => a % b)],
+  ['=?', opNumNumToBool((a, b) => a == b)],
+  ['<?', opNumNumToBool((a, b) => a < b)],
+  ['>?', opNumNumToBool((a, b) => a > b)],
+  ['/=?', opNumNumToBool((a, b) => a != b)],
+  ['>=?', opNumNumToBool((a, b) => a >= b)],
+  ['<=?', opNumNumToBool((a, b) => a <= b)],
+  ['ceil', opRealToReal(Math.ceil)],
+  ['floor', opRealToReal(Math.floor)],
+  ['trunc', opRealToReal(Math.trunc)],
+  ['round', opRealToReal(Math.round)],
+  ['exp', opRealToReal(Math.exp)],
+  ['log', opRealToReal(Math.log)],
+  ['sin', opRealToReal(Math.sin)],
+  ['cos', opRealToReal(Math.cos)],
+  ['tan', opRealToReal(Math.tan)],
+  ['asin', opRealToReal(Math.asin)],
+  ['acos', opRealToReal(Math.acos)],
+  ['atan', opRealToReal(Math.atan)],
 
   /********************/
   // String functions //
   /********************/
-  // ("str", makeDatum(String) ""),
-  // ("str@", containerAt StrCtner),
-  // ("str+", opStrStrStr(++)),
-  // ("str-nl", strStringNewline),
-  // ("str-len", containerLen StrCtner),
-  // ("str-sub", strSubstring),
-  // ("str-set!", containerSet StrCtner),
-  // ("str-fill!", containerFill StrCtner),
-  // ("str=?", opStrStrBool(==)),
-  // ("str<?", opStrStrBool(<)),
-  // ("str>?", opStrStrBool(>)),
-  // ("str<=?", opStrStrBool(<=)),
-  // ("str>=?", opStrStrBool(>=)),
+  ['str', strEmptyProc],
+  ['str@', strAtProc],
+  ['str+', strAppendProc],
+  ['str-nl', strNewlineProc],
+  ['str-len', strLenProc],
+  ['str-sub', strSubstringProc],
+  ['str-set!', strSetProc],
+  ['str-fill!', strFillProc],
+  ['str=?', opStrStrToBool((a, b) => a == b)],
+  ['str<?', opStrStrToBool((a, b) => a < b)],
+  ['str>?', opStrStrToBool((a, b) => a > b)],
+  ['str<=?', opStrStrToBool((a, b) => a <= b)],
+  ['str>=?', opStrStrToBool((a, b) => a >= b)],
 
   /********************/
   // Vector functions //
   /********************/
-  // ("vec", makeDatum(Vector) V.empty),
-  // ("vec@", containerAt VecCtner),
-  // ("vec-len", containerLen VecCtner),
-  // ("vec-set!", containerSet VecCtner),
-  // ("vec-fill!", containerFill VecCtner),
+  ['vec', vecEmptyProc],
+  ['vec@', vecAtProc],
+  ['vec-len', vecLenProc],
+  ['vec-set!', vecSetProc],
+  ['vec-fill!', vecFillProc],
 
   /******************/
   // Hash functions //
   /******************/
-  // ("hash", makeDatum(Hash) H.empty),
-  // ("hash@", containerAt HashCtner),
-  // ("hash-set!", containerSet HashCtner),
-  // ("hash-keys", hashElems(map(String).H.keys)),
-  // ("hash-vals", hashElems H.elems),
+  ['hash', hashEmptyProc],
+  ['hash@', hashAtProc],
+  ['hash-set!', hashSetProc],
+  ['hash-keys', hashKeysProc],
+  ['hash-vals', hashValsProc],
 
   /******************/
   // Pair functions //
@@ -167,49 +170,74 @@ export const Preloaded: [string, (i: Interpreter, a: Datum[]) => Datum][] = [
   /**************************/
   // Type casting functions //
   /**************************/
-  // ("sym->str", unaryFunc symToStr),
-  // ("bool->str", unaryFunc boolToStr),
-  // ("chr->str", unaryFunc chrToStr),
-  // ("chr->int", unaryFunc chrToInt),
-  // ("int->chr", unaryFunc intToChr),
-  // ("num->str", unaryFunc numToStr),
-  // ("str->sym", unaryFunc strToSym),
-  // ("str->int", unaryFunc strToInt),
-  // ("str->real", unaryFunc strToReal),
-  // ("str->vec", unaryFunc strToVec),
-  // ("vec->str", unaryFunc vecToStr),
-  // ("vec->list", unaryFunc vecToList),
-  // ("hash->vec", unaryFunc hashToVec),
-  // ("hash->env", unaryFunc hashToEnv)
+  ['sym->str', symToStrProc],
+  ['bool->str', boolToStrProc],
+  ['chr->str', chrToStrProc],
+  ['chr->int', chrToIntProc],
+  ['int->chr', intToChrProc],
+  ['num->str', numToStrProc],
+  ['str->sym', strToSymProc],
+  ['str->int', strToIntProc],
+  ['str->real', strToRealProc],
+  ['str->vec', strToVecProc],
+  ['vec->str', vecToStrProc],
+  ['vec->list', vecToListProc],
+  ['hash->vec', hashToVecProc],
+  ['hash->env', hashToEnvProc]
 ];
+
+type DatumKinds<T extends [...Datum[]]> = { length: T['length'] } & {
+  [I in keyof T]: T[I] extends Datum ? T[I]['kind'] | null : never
+};
+
+function noArguments(args: Datum[]) {
+  if (args.length > 0) {
+    throw new RuntimeError(
+      `function called with ${args.length} argument(s)`
+      + ' but expected none'
+    );
+  }
+}
+
+function minArguments(args: Datum[], count: number) {
+  if (args.length <= count) {
+    throw new RuntimeError(
+      `function called with ${args.length} argument(s) but`
+      + ` needs at least ${count}`
+    );
+  }
+}
+
+function readArguments<T extends [...Datum[]]>(args: Datum[], kinds: DatumKinds<T>): T {
+  if (args.length !== kinds.length) {
+    throw new RuntimeError(
+      `function called with ${args.length} argument(s)`
+      + ` instead of ${kinds.length}`
+    );
+  }
+
+  args.forEach((arg, i) => {
+    if (kinds[i] && kinds[i] != arg.kind) {
+      throw new RuntimeError(
+        `argument '${toString(arg)}' (${i}) is of type ${arg.kind}, `
+        + ` expected type ${kinds[i]}`
+      );
+    }
+  });
+
+  return args as T;
+}
 
 /**************/
 // Primitives //
 /**************/
 
-function ensureCount(args: Datum[], count: number) {
-  if (args.length !== count) {
-    throw new RuntimeError(
-      `function called with ${args.length} argument(s) instead of ${count}`
-    );
-  }
-}
-
-function ensureMinCount(args: Datum[], count: number) {
-  if (args.length <= count) {
-    throw new RuntimeError(
-      `function called with ${args.length} argument(s) but needs at least ${count}`
-    );
-  }
-}
-
 function setFn(interp: Interpreter, args: Datum[]): Datum {
-  ensureCount(args, 2);
-  const name = cast<Symbol>(args[0], DatumKind.Symbol);
-  const value = args[1];
+  const [name, value] = readArguments<[Symbol, Datum]>(args, [
+    DatumKind.Symbol, null
+  ]);
 
-  interp.environment().write(name.value, value);
-  return mkVoid();
+  return interp.environment().write(name.value, value);
 }
 
 function exitFn(_: Interpreter, args: Datum[]): Datum {
@@ -218,8 +246,8 @@ function exitFn(_: Interpreter, args: Datum[]): Datum {
 }
 
 function loadFn(interp: Interpreter, args: Datum[]): Datum {
-  ensureCount(args, 1);
-  const file = cast<String>(args[0], DatumKind.String);
+  const [file] = readArguments<[String]>(args, [DatumKind.String]);
+
   const content = readFileToString(file.value);
 
   const data = new Parser()
@@ -237,9 +265,11 @@ function loadFn(interp: Interpreter, args: Datum[]): Datum {
 }
 
 function evalFn(interp: Interpreter, args: Datum[]): Datum {
-  ensureCount(args, 2);
-  const env = cast<Environment>(args[1], DatumKind.Environment);
-  const evaled = interp.evaluateWith(args[0], env);
+  const [arg, env] = readArguments<[Datum, Environment]>(args, [
+    null, DatumKind.Environment
+  ]);
+
+  const evaled = interp.evaluateWith(arg, env);
 
   if (evaled instanceof RuntimeError) {
     throw evaled;
@@ -249,7 +279,7 @@ function evalFn(interp: Interpreter, args: Datum[]): Datum {
 }
 
 function applyFn(interp: Interpreter, args: Datum[]): Datum {
-  ensureMinCount(args, 1);
+  minArguments(args, 1);
 
   const [fn, fnargs] = [args[0], args.slice(1)];
 
@@ -261,7 +291,7 @@ function applyFn(interp: Interpreter, args: Datum[]): Datum {
 }
 
 function systemFn(_: Interpreter, args: Datum[]): Datum {
-  ensureMinCount(args, 1);
+  minArguments(args, 1);
 
   const cmd = cast<String>(args[0], DatumKind.String).value;
 
@@ -277,7 +307,8 @@ function systemFn(_: Interpreter, args: Datum[]): Datum {
   ]);
 }
 
-function voidFn(_: Interpreter, __: Datum[]): Datum {
+function voidFn(_: Interpreter, args: Datum[]): Datum {
+  noArguments(args);
   return mkVoid();
 }
 
@@ -287,9 +318,9 @@ function voidFn(_: Interpreter, __: Datum[]): Datum {
 
 function opBoolBoolToBool(op: (a: boolean, b: boolean) => boolean) {
   return (_: Interpreter, args: Datum[]): Datum => {
-    ensureCount(args, 2);
-    const a = cast<Boolean>(args[0], DatumKind.Boolean);
-    const b = cast<Boolean>(args[1], DatumKind.Boolean);
+    const [a, b] = readArguments<[Boolean, Boolean]>(
+      args, [DatumKind.Boolean, DatumKind.Boolean]
+    );
 
     return {
       kind: DatumKind.Boolean,
@@ -331,9 +362,9 @@ function isUpper(a: number): boolean {
 
 function opChrChrToBool(op: (a: number, b: number) => boolean) {
   return (_: Interpreter, args: Datum[]): Datum => {
-    ensureCount(args, 2);
-    const a = cast<Character>(args[0], DatumKind.Character);
-    const b = cast<Character>(args[1], DatumKind.Character);
+    const [a, b] = readArguments<[Character, Character]>(
+      args, [DatumKind.Character, DatumKind.Character]
+    );
 
     return {
       kind: DatumKind.Boolean,
@@ -344,8 +375,7 @@ function opChrChrToBool(op: (a: number, b: number) => boolean) {
 
 function opChrToBool(op: (a: number) => boolean) {
   return (_: Interpreter, args: Datum[]): Datum => {
-    ensureCount(args, 1);
-    const a = cast<Character>(args[0], DatumKind.Character);
+    const [a] = readArguments<[Character]>(args, [DatumKind.Character]);
 
     return {
       kind: DatumKind.Boolean,
@@ -354,23 +384,204 @@ function opChrToBool(op: (a: number) => boolean) {
   };
 }
 
+/*********************/
+// Numeric functions //
+/*********************/
+
+function opNumNumToNum(op: (a: number, b: number) => number) {
+  return (_: Interpreter, args: Datum[]): Datum => {
+    const [a, b] = readArguments<[Real | Integer, Real | Integer]>(
+      args, [null, null]
+    );
+
+    return {
+      kind: DatumKind.Real,
+      value: op(a.value, b.value),
+    };
+  };
+}
+
+function opNumNumToBool(op: (a: number, b: number) => boolean) {
+  return (_: Interpreter, args: Datum[]): Datum => {
+    const [a, b] = readArguments<[Real | Integer, Real | Integer]>(
+      args, [null, null]
+    );
+
+    return {
+      kind: DatumKind.Boolean,
+      value: op(a.value, b.value),
+    };
+  };
+}
+
+
+function opRealToReal(op: (x: number) => number) {
+  return (_: Interpreter, args: Datum[]): Datum => {
+    const [x] = readArguments<[Real]>(args, [DatumKind.Real]);
+
+    return {
+      kind: DatumKind.Real,
+      value: op(x.value),
+    };
+  };
+}
+
+/********************/
+// String functions //
+/********************/
+
+function strEmptyProc(_: Interpreter, args: Datum[]): Datum {
+  noArguments(args);
+
+  return {
+    kind: DatumKind.String,
+    value: '',
+  };
+}
+
+function strAtProc(_: Interpreter, args: Datum[]): Datum {
+  return mkVoid();
+}
+
+function strAppendProc(_: Interpreter, args: Datum[]): Datum {
+  return mkVoid();
+}
+
+function strNewlineProc(_: Interpreter, args: Datum[]): Datum {
+  return mkVoid();
+}
+
+function strLenProc(_: Interpreter, args: Datum[]): Datum {
+  return mkVoid();
+}
+
+function strSubstringProc(_: Interpreter, args: Datum[]): Datum {
+  return mkVoid();
+}
+
+function strSetProc(_: Interpreter, args: Datum[]): Datum {
+  return mkVoid();
+}
+
+function strFillProc(_: Interpreter, args: Datum[]): Datum {
+  return mkVoid();
+}
+
+function opStrStrToBool(op: (a: string, b: string) => boolean) {
+  return (_: Interpreter, args: Datum[]): Datum => {
+    const [a, b] = readArguments<[String, String]>(args, [
+      DatumKind.String, DatumKind.String
+    ]);
+
+    return {
+      kind: DatumKind.Boolean,
+      value: op(a.value, b.value),
+    };
+  };
+}
+
+
+/********************/
+// Vector functions //
+/********************/
+
+function vecEmptyProc(_: Interpreter, args: Datum[]): Datum {
+  noArguments(args);
+
+  return {
+    kind: DatumKind.Vector,
+    value: [],
+  };
+}
+
+function vecAtProc(_: Interpreter, args: Datum[]): Datum {
+  const [vec, idx] = readArguments<[Vector, Integer]>(args, [
+    DatumKind.Vector, DatumKind.Integer,
+  ]);
+
+  if (vec.value.length >= idx.value) {
+    throw new RuntimeError(
+      `index '${idx.value}' out of bounds of vector`
+      + ` with ${vec.value.length} elements`
+    );
+  }
+
+  return vec.value[idx.value];
+}
+
+function vecLenProc(_: Interpreter, args: Datum[]): Datum {
+  const [vec] = readArguments<[Vector]>(args, [DatumKind.Vector]);
+
+  return {
+    kind: DatumKind.Integer,
+    value: vec.value.length,
+  };
+}
+
+function vecSetProc(_: Interpreter, args: Datum[]): Datum {
+  const [vec, idx, value] = readArguments<[Vector, Integer, Datum]>(args, [
+    DatumKind.Vector, DatumKind.Integer, null
+  ]);
+
+  if (vec.value.length >= idx.value) {
+    throw new RuntimeError(
+      `index '${idx.value}' out of bounds of vector`
+      + ` with ${vec.value.length} elements`
+    );
+  }
+
+  return (vec.value[idx.value] = value);
+}
+
+function vecFillProc(_: Interpreter, args: Datum[]): Datum {
+  const [vec, value] = readArguments<[Vector, Datum]>(args, [
+    DatumKind.Vector, null
+  ]);
+
+  vec.value.fill(value);
+  return mkVoid();
+}
+
+/******************/
+// Hash functions //
+/******************/
+
+function hashEmptyProc(_: Interpreter, args: Datum[]): Datum {
+  return mkVoid();
+}
+
+function hashAtProc(_: Interpreter, args: Datum[]): Datum {
+  return mkVoid();
+}
+
+function hashSetProc(_: Interpreter, args: Datum[]): Datum {
+  return mkVoid();
+}
+
+function hashKeysProc(_: Interpreter, args: Datum[]): Datum {
+  return mkVoid();
+}
+
+function hashValsProc(_: Interpreter, args: Datum[]): Datum {
+  return mkVoid();
+}
+
 /******************/
 // Pair functions //
 /******************/
 
 function carProc(_: Interpreter, args: Datum[]): Datum {
-  ensureCount(args, 1);
-  return cast<Pair>(args[0], DatumKind.Pair).left;
-}
+  const [x] = readArguments<[Pair]>(args, [DatumKind.Pair]);
+  return x.left;
+};
 
 function cdrProc(_: Interpreter, args: Datum[]): Datum {
-  ensureCount(args, 1);
-  return cast<Pair>(args[0], DatumKind.Pair).right;
+  const [x] = readArguments<[Pair]>(args, [DatumKind.Pair]);
+  return x.right;
 }
 
 function consProc(_: Interpreter, args: Datum[]): Datum {
-  ensureCount(args, 2);
-  const [car, cdr] = args;
+  const [car, cdr] = readArguments<[Datum, Datum]>(args, [null, null]);
 
   return {
     kind: DatumKind.Pair,
@@ -380,7 +591,7 @@ function consProc(_: Interpreter, args: Datum[]): Datum {
 }
 
 function isNilProc(_: Interpreter, args: Datum[]): Datum {
-  ensureCount(args, 1);
+  const [x] = readArguments<[Datum]>(args, [null]);
 
   return {
     kind: DatumKind.Boolean,
@@ -397,7 +608,7 @@ function listProc(_: Interpreter, args: Datum[]): Datum {
 /*************************/
 
 function areEqual(_: Interpreter, args: Datum[]): Datum {
-  ensureCount(args, 2);
+  const [a, b] = readArguments<[Datum, Datum]>(args, [null, null]);
 
   return {
     kind: DatumKind.Boolean,
@@ -406,7 +617,7 @@ function areEqual(_: Interpreter, args: Datum[]): Datum {
 }
 
 function areSame(_: Interpreter, args: Datum[]): Datum {
-  ensureCount(args, 2);
+  const [a, b] = readArguments<[Datum, Datum]>(args, [null, null]);
 
   return {
     kind: DatumKind.Boolean,
@@ -416,10 +627,11 @@ function areSame(_: Interpreter, args: Datum[]): Datum {
 
 function isOfDatumKind(kind: DatumKind) {
   return (_: Interpreter, args: Datum[]): Datum => {
-    ensureCount(args, 1);
+    const [arg] = readArguments<[Datum]>(args, [null]);
+
     return {
       kind: DatumKind.Boolean,
-      value: args[0].kind === kind,
+      value: arg.kind === kind,
     };
   };
 }
@@ -429,48 +641,55 @@ function isOfDatumKind(kind: DatumKind) {
 /****************/
 
 function readProc(_: Interpreter, args: Datum[]): Datum {
-  if (args.length === 0) {
-    return {
-      kind: DatumKind.String,
-      value: getStdin().read(),
-    };
+  switch (args.length) {
+    case 0: {
+      return {
+        kind: DatumKind.String,
+        value: getStdin().read(),
+      };
+    }
+
+    default: {
+      const [port] = readArguments<[Port]>(args, [DatumKind.Port]);
+
+      if (port.value instanceof WritePort) {
+        throw new RuntimeError('port is write-only');
+      }
+
+      return {
+        kind: DatumKind.String,
+        value: port.value.read(),
+      };
+
+    }
   }
-
-  ensureCount(args, 1);
-  const port = cast<Port>(args[0], DatumKind.Port);
-
-  if (port.value instanceof WritePort) {
-    throw new RuntimeError('port is write-only');
-  }
-
-  return {
-    kind: DatumKind.String,
-    value: port.value.read(),
-  };
 }
 
 function writeProc(_: Interpreter, args: Datum[]): Datum {
-  if (args.length === 1) {
-    const str = cast<String>(args[0], DatumKind.String);
-    getStdout().write(str.value);
-    return mkVoid();
+  switch (args.length) {
+    case 1: {
+      const [str] = readArguments<[String]>(args, [DatumKind.String]);
+      getStdout().write(str.value);
+      return mkVoid();
+    }
+
+    default: {
+      const [port, str] = readArguments<[Port, String]>(args, [
+        DatumKind.Port, DatumKind.String
+      ]);
+
+      if (port.value instanceof ReadPort) {
+        throw new RuntimeError('port is read-only');
+      }
+
+      port.value.write(str);
+      return mkVoid();
+    }
   }
-
-  ensureCount(args, 2);
-  const port = cast<Port>(args[2], DatumKind.Port);
-  const str = cast<String>(args[1], DatumKind.String);
-
-  if (port.value instanceof ReadPort) {
-    throw new RuntimeError('port is read-only');
-  }
-
-  port.value.write(str);
-  return mkVoid();
 }
 
 function openInputFile(_: Interpreter, args: Datum[]): Datum {
-  ensureCount(args, 1);
-  const file = cast<String>(args[0], DatumKind.String);
+  const [file] = readArguments<[String]>(args, [DatumKind.String]);
 
   return {
     kind: DatumKind.Port,
@@ -479,8 +698,7 @@ function openInputFile(_: Interpreter, args: Datum[]): Datum {
 }
 
 function openOutputFile(_: Interpreter, args: Datum[]): Datum {
-  ensureCount(args, 1);
-  const file = cast<String>(args[0], DatumKind.String);
+  const [file] = readArguments<[String]>(args, [DatumKind.String]);
 
   return {
     kind: DatumKind.Port,
@@ -489,31 +707,91 @@ function openOutputFile(_: Interpreter, args: Datum[]): Datum {
 }
 
 function closePort(_: Interpreter, args: Datum[]): Datum {
-  ensureCount(args, 1);
-  cast<Port>(args[0], DatumKind.Port).value.destroy();
+  const [port] = readArguments<[Port]>(args, [DatumKind.Port]);
+  port.value.destroy();
   return mkVoid();
 }
 
 function readContents(_: Interpreter, args: Datum[]): Datum {
-  ensureCount(args, 1);
+  const [input] = readArguments<[String | Port]>(args, [null]);
 
-  const file = tryCast<String>(args[0], DatumKind.String);
+  switch (input.kind) {
+    case DatumKind.String: {
+      return {
+        kind: DatumKind.String,
+        value: readFileToString(input.value),
+      };
+    }
 
-  if (file) {
-    return {
-      kind: DatumKind.String,
-      value: readFileToString(file.value),
-    };
+    case DatumKind.Port: {
+      if (input.value instanceof WritePort) {
+        throw new RuntimeError('port is write-only');
+      }
+
+      return {
+        kind: DatumKind.String,
+        value: input.value.read(),
+      };
+    }
   }
+}
 
-  const port = cast<Port>(args[0], DatumKind.Port);
+/**************************/
+// Type casting functions //
+/**************************/
 
-  if (port.value instanceof WritePort) {
-    throw new RuntimeError('port is write-only');
-  }
+function symToStrProc(_: Interpreter, args: Datum[]): Datum {
+  return mkVoid();
+}
 
-  return {
-    kind: DatumKind.String,
-    value: port.value.read(),
-  };
+function boolToStrProc(_: Interpreter, args: Datum[]): Datum {
+  return mkVoid();
+}
+
+function chrToStrProc(_: Interpreter, args: Datum[]): Datum {
+  return mkVoid();
+}
+
+function chrToIntProc(_: Interpreter, args: Datum[]): Datum {
+  return mkVoid();
+}
+
+function intToChrProc(_: Interpreter, args: Datum[]): Datum {
+  return mkVoid();
+}
+
+function numToStrProc(_: Interpreter, args: Datum[]): Datum {
+  return mkVoid();
+}
+
+function strToSymProc(_: Interpreter, args: Datum[]): Datum {
+  return mkVoid();
+}
+
+function strToIntProc(_: Interpreter, args: Datum[]): Datum {
+  return mkVoid();
+}
+
+function strToRealProc(_: Interpreter, args: Datum[]): Datum {
+  return mkVoid();
+}
+
+function strToVecProc(_: Interpreter, args: Datum[]): Datum {
+  return mkVoid();
+}
+
+function vecToStrProc(_: Interpreter, args: Datum[]): Datum {
+  return mkVoid();
+}
+
+function vecToListProc(_: Interpreter, args: Datum[]): Datum {
+  return mkVoid();
+}
+
+function hashToVecProc(_: Interpreter, args: Datum[]): Datum {
+  return mkVoid();
+}
+
+function hashToEnvProc(_: Interpreter, args: Datum[]): Datum {
+  return mkVoid();
 }
