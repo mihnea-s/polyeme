@@ -146,6 +146,12 @@ export class Parser {
       return mkSymbol(symbol);
     }
 
+    // Match and capture possible var args
+    if (matches = /^\.\./.exec(this.buffer)) {
+      this.forward(matches[0].length);
+      return mkSymbol('..');
+    }
+
     this.expect('(', '[');
 
     if (this.follows(')', ']')) {

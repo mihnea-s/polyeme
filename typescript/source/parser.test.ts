@@ -74,6 +74,53 @@ const cases: [string, Datum][] = [
       },
     }
   }],
+
+  ['((lambda (x) x) 2)', {
+    kind: DatumKind.Pair,
+    left: {
+      kind: DatumKind.Pair,
+      left: {
+        kind: DatumKind.Symbol,
+        value: 'lambda'
+      },
+      right: {
+        kind: DatumKind.Pair,
+        left: {
+          kind: DatumKind.Pair,
+          left: {
+            kind: DatumKind.Symbol,
+            value: 'x',
+          },
+          right: {
+            kind: DatumKind.Symbol,
+            value: '()',
+          },
+        },
+        right: {
+          kind: DatumKind.Pair,
+          left: {
+            kind: DatumKind.Symbol,
+            value: 'x',
+          },
+          right: {
+            kind: DatumKind.Symbol,
+            value: '()',
+          },
+        }
+      }
+    },
+    right: {
+      kind: DatumKind.Pair,
+      left: {
+        kind: DatumKind.Integer,
+        value: 2
+      },
+      right: {
+        kind: DatumKind.Symbol,
+        value: '()',
+      },
+    }
+  }]
 ];
 
 test('test Parser', () => {

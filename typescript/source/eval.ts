@@ -180,23 +180,27 @@ export class Interpreter {
 
   private evalLambda(params: Datum, body: Datum[]): Datum {
     const closure = this.environment();
+
     const paramNames = unpair(params).map(
       param => cast<Symbol>(param, DatumKind.Symbol).value
     );
 
-    return mkProcedure(body, null, paramNames, closure);
+    let varParam = null;
+
+    if (paramNames[paramNames.length - 1] === '..') {
+      paramNames.pop();
+      varParam = paramNames.pop() ?? null;
+    }
+
+    return mkProcedure(body, varParam, paramNames, closure);
   }
 
   private evalPair(pair: Pair): Datum {
-    if (pair.left.kind === DatumKind.Procedure) {
+    if (pair.left.kind !== DatumKind.Symbol) {
       return this.applyProc(
-        pair.left,
+        cast<Procedure>(this.tryEvaluate(pair.left), DatumKind.Procedure),
         unpair(pair.right).map((d) => this.tryEvaluate(d))
       );
-    }
-
-    if (pair.left.kind !== DatumKind.Symbol) {
-      throw new RuntimeError('invalid call to non-function');
     }
 
     switch (pair.left.value) {
@@ -294,7 +298,7 @@ export class Interpreter {
       throw new RuntimeError('invalid interpreter state');
     }
 
-    return this.env[0];
+    return this.env[this.env.length - 1];
   }
 
   /**
