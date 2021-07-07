@@ -30,6 +30,7 @@ import {
   mkPort,
   mkReal,
   mkString,
+  mkSymbol,
   mkVector,
   mkVoid,
   Pair,
@@ -776,57 +777,88 @@ function readContents(_: Interpreter, args: Datum[]): Datum {
 /**************************/
 
 function symToStrProc(_: Interpreter, args: Datum[]): Datum {
-  return mkVoid();
+  const [sym] = readArguments<[Symbol]>(args, [DatumKind.Symbol]);
+  return mkString(sym.value);
 }
 
 function boolToStrProc(_: Interpreter, args: Datum[]): Datum {
-  return mkVoid();
+  const [bool] = readArguments<[Boolean]>(args, [DatumKind.Boolean]);
+  return mkString(bool.value ? 'true' : 'false');
 }
 
 function chrToStrProc(_: Interpreter, args: Datum[]): Datum {
-  return mkVoid();
+  const [char] = readArguments<[Character]>(args, [DatumKind.Character]);
+  return mkString(String.fromCharCode(char.value));
 }
 
 function chrToIntProc(_: Interpreter, args: Datum[]): Datum {
-  return mkVoid();
+  const [char] = readArguments<[Character]>(args, [DatumKind.Character]);
+  return mkInteger(char.value);
 }
 
 function intToChrProc(_: Interpreter, args: Datum[]): Datum {
-  return mkVoid();
+  const [int] = readArguments<[Integer]>(args, [DatumKind.Integer]);
+  return mkCharacter(int.value);
 }
 
 function numToStrProc(_: Interpreter, args: Datum[]): Datum {
-  return mkVoid();
+  const [num] = readArguments<[Integer | Real]>(args, [null]);
+  return mkString(num.value.toString());
 }
 
 function strToSymProc(_: Interpreter, args: Datum[]): Datum {
-  return mkVoid();
+  const [str] = readArguments<[String]>(args, [DatumKind.String]);
+  return mkSymbol(str.value);
 }
 
 function strToIntProc(_: Interpreter, args: Datum[]): Datum {
+  const [str] = readArguments<[String]>(args, [DatumKind.String]);
+  // TODO!
   return mkVoid();
 }
 
 function strToRealProc(_: Interpreter, args: Datum[]): Datum {
+  const [str] = readArguments<[String]>(args, [DatumKind.String]);
+  // TODO!
   return mkVoid();
 }
 
 function strToVecProc(_: Interpreter, args: Datum[]): Datum {
+  // TODO!
+  const [str] = readArguments<[String]>(args, [DatumKind.String]);
   return mkVoid();
 }
 
 function vecToStrProc(_: Interpreter, args: Datum[]): Datum {
+  const [vec] = readArguments<[Vector]>(args, [DatumKind.Vector]);
+  // TODO!
   return mkVoid();
 }
 
 function vecToListProc(_: Interpreter, args: Datum[]): Datum {
+  const [vec] = readArguments<[Vector]>(args, [DatumKind.Vector]);
+  // TODO!
   return mkVoid();
 }
 
 function hashToVecProc(_: Interpreter, args: Datum[]): Datum {
-  return mkVoid();
+  const [hash] = readArguments<[Hash]>(args, [DatumKind.Hash]);
+  const vec = [] as Datum[];
+
+  for (const [key, value] of hash.value.entries()) {
+    vec.push(mkPair(key, value));
+  }
+
+  return mkVector(...vec);
 }
 
 function hashToEnvProc(_: Interpreter, args: Datum[]): Datum {
-  return mkVoid();
+  const [hash] = readArguments<[Hash]>(args, [DatumKind.Hash]);
+  const envMap = new Map<string, Datum>();
+
+  for (const [key, value] of hash.value.entries()) {
+    envMap.set(cast<String>(key, DatumKind.String).value, value);
+  }
+
+  return new Environment(envMap);
 }
