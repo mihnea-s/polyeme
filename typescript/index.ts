@@ -68,7 +68,7 @@ const runRepl = (buffer = '', indent = 0) => {
       return runRepl();
     }
 
-    const result = INTERP.evaluate(parsed);
+    const result = INTERP.tryEvaluate(parsed);
 
     if (result instanceof RuntimeError) {
       console.log(red(`Error while executing: ${result.description}.`));
