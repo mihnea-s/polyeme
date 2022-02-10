@@ -25,5 +25,6 @@ language in use.
 - [ ] OCaml
 - [ ] Python
 - [ ] Rust
-- [ ] TypeScript
+- [x] TypeScript (almost done, see typescript/README.md)
+- [x] Haskell (almost done, see haskell/README.md)
 - [ ] Zig
