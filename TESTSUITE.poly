@@ -12,16 +12,15 @@
 (def tests-passed 0)
 (def tests-failed '())
 
+(defn increment-passed ()
+  (set! tests-passed (+ 1 tests-passed)))
+(defn increment-failed (m)
+  (set! tests-failed (cons m tests-failed)))
+
 ; Assert is used to assure the truthness of an expression
-(defn assert   (x m)   (unless x (exit m)))
+(defn assert (x m)   
+  (if x (increment-passed) (increment-failed m)))
 (defn asserteq (x y m) (assert (eq? x y) m))
-
-(defn +1 x (+ 1 x))
-(defn test x (if x 
-  (set! tests-passed (+1 tests-passed))
-  (set! tests-failed (+1 tests-failed))))
-
-(defn testeq (x y) (test (eq? x y)))
 
 ; Basic mathematics
 (asserteq (+ 2 2) 4 "math: addition")
@@ -54,6 +53,9 @@
   (asserteq (vec@ 0 b) "a" "mutation: vec-set!"))
 
 ; Finish test suite
-(write "Every test passed succesfully")
-(write "The implementation is complete")
-
+(write (str+ "TESTSUITE SCORE: " (num->str tests-passed)))
+(write "THE FOLLOWING TESTS HAVE FAILED: ")
+(write tests-failed)
+(write "")
+(write "Test suite has completed succesfully.")
+(write "NOTE: This does not mean the implementation is complete.")
